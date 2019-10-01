@@ -1,10 +1,10 @@
-﻿using ESP8266_Weather.Context;
-using ESP8266_Weather.Models;
+﻿using qWeather.Context;
+using qWeather.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
-namespace ESP8266_Weather.Controllers
+namespace qWeather.Controllers
 {
     public class HomeController : Controller
     {

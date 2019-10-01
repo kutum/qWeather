@@ -1,7 +1,7 @@
-﻿using ESP8266_Weather.Models;
+﻿using qWeather.Models;
 using System.Data.Entity;
 
-namespace ESP8266_Weather.Context
+namespace qWeather.Context
 {
     [DbConfigurationType(typeof(MySql.Data.EntityFramework.MySqlEFConfiguration))]
     public class WeatherDbContext : DbContext
