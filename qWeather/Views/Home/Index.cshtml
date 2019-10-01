@@ -3,31 +3,45 @@
 @{
     ViewBag.Title = "Home Page";
 }
+<div class="card">
+    <div class="card-header">
+        <div class="d-inline">CURRENT OUTSIDE : @Model.Where(x => x.DATETIME == Model.Max(y => y.DATETIME)).FirstOrDefault().VAL1.ToString("0.0");</div>
+        <div class="d-inline">INSIDE : @Model.Where(x => x.DATETIME == Model.Max(y => y.DATETIME)).FirstOrDefault().VAL2.ToString("0.0")</div>
+    </div>
+    <hr />
+    <div class="card-body" style="height:auto">
+        <div id="chart_div" style="width:100%; height:80vh"></div>
+    </div>
+</div>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-<table class="table" style="padding-top:50px">
-    <tr>
-        <th>
-            TIME
-        </th>
-        <th>
-            OUTSIDE
-        </th>
-        <th>
-            INSIDE
-        </th>
-    </tr>
-    @foreach (var item in Model)
-    {
-    <tr>
-        <td>
-            @item.DATETIME
-        </td>
-        <td>
-            @item.VAL1
-        </td>
-        <td>
-            @item.VAL2
-        </td>
-    </tr>
+<script>
+    google.charts.load('current', { packages: ['annotationchart'] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('date', 'Date');
+        data.addColumn('number', 'T1');
+        data.addColumn('number', 'T2');
+
+        var dataSet = @Html.Raw(Json.Encode(Model));
+
+        var dataArray = [];
+
+        for (var i = 0; i < dataSet.length; i++) {
+            dataArray.push([new Date(parseInt(dataSet[i].DATETIME.substr(6))), dataSet[i].VAL1, dataSet[i].VAL2]);
+        }
+
+        data.addRows(dataArray);
+  
+        var chart = new google.visualization.AnnotationChart(document.getElementById('chart_div'));
+
+        var options = {
+            displayAnnotations: true
+        };
+
+        chart.draw(data, options);
     }
-</table>
+</script>
