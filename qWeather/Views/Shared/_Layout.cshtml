@@ -12,12 +12,14 @@
     <nav class="navbar navbar-dark bg-dark">
         <a class="navbar-brand" href="#">qWeather</a>
     </nav>
-    <div class="container body-content">
-        @RenderBody()
-    </div>
+
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
+
+    <div class="container body-content">
+        @RenderBody()
+    </div>
 </body>
 </html>
