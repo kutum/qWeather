@@ -166,6 +166,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Weather.cs" />
+    <Compile Include="Models\WeatherAverageView.cs" />
     <Compile Include="Models\WeatherView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
