@@ -78,8 +78,8 @@ namespace qWeather.Controllers
 
             foreach (var item in weather)
             {
-                insideSum += item.VAL1;
-                outsideSum += item.VAL2;
+                insideSum += item.VAL2;
+                outsideSum += item.VAL1;
             }
 
             WeatherAverageView weatherAverageView = new WeatherAverageView(){
