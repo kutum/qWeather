@@ -13,11 +13,11 @@
 #define DHTPIN 2 //OUT Temperature
 #define DHTTYPE DHT11 
 
-
 DHT dht(DHTPIN, DHTTYPE);
 OneWire oneWire_DT(DT);
 DallasTemperature DS18B20_DT(&oneWire_DT);
 LiquidCrystal_I2C lcd(0x27, 16, 2);  
+aREST rest = aREST(); 
 
 float T_IN;
 float Humidity;
@@ -29,16 +29,13 @@ byte mac[6];
 
 WiFiServer server(80);
 WiFiClient client;
+
 MySQL_Connection conn((Client *)&client);
-
 char query[128];
-
 IPAddress mysql_ip(192, 168 ,1, 5);          // MySQL server IP
 char mysql_user[] = "kutum";           // MySQL user
 char mysql_password[] = "myofrene";       // MySQL password
-
 unsigned long timing;
-
 bool first;
 
 
@@ -80,18 +77,9 @@ void setup(){
   WiFi.begin(ssid, pass);
   lcd.setCursor(0, 0);
   lcd.print("WiFi Connected");
-
   delay(1000);
   lcd.clear();
   
-  lcd.setCursor(0, 0);
-  lcd.print("Assigned IP: ");
-  lcd.setCursor(0, 1);
-  lcd.print(WiFi.localIP());
-  
-  delay(1000);
-  lcd.clear();
-
   lcd.setCursor(0, 0);
   lcd.print("Connecting to db");
   lcd.setCursor(0, 1);
@@ -107,7 +95,20 @@ void setup(){
   first = true;
   lcd.setCursor(0, 0);
   lcd.print("STARTING");
+
+  rest.variable("T_IN", &T_IN);                    
+  rest.variable("T_OUT", &T_OUT); 
+  rest.variable("Humidity", &Humidity); 
+  rest.set_id("1");                                              
+  rest.set_name("esp8266");    
   
+  server.begin(); 
+  lcd.setCursor(0, 0);
+  lcd.print("Server started");
+  lcd.setCursor(0, 1);
+  lcd.print(WiFi.localIP());
+  delay(1000);
+  lcd.clear();
 }
 
 void loop(){
@@ -125,6 +126,7 @@ void loop(){
    
   delay(1000);
   writeLCD();
+  restapi();
 }
 
 void writeLCD()
@@ -181,3 +183,16 @@ void sendquery(){
     
     writeLCD();
 }
+
+void restapi(){
+
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+  while (!client.available()) {
+    delay(1);
+  }
+  rest.handle(client);
+}
+
