@@ -70,27 +70,29 @@ void setup(){
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Connecting to... ");
+  lcd.print("CONNECTING WIFI");
   lcd.setCursor(0, 1);
   lcd.print(ssid);
+  delay(1000);
+  lcd.clear();
   
   WiFi.begin(ssid, pass);
   lcd.setCursor(0, 0);
-  lcd.print("WiFi Connected");
+  lcd.print("WIFI CONNECTED");
   delay(1000);
   lcd.clear();
   
   lcd.setCursor(0, 0);
-  lcd.print("Connecting to db");
+  lcd.print("CONNECTING TO DB");
   lcd.setCursor(0, 1);
+  lcd.print(mysql_ip);
   while (conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true) {
-    delay(200);
+    delay(100);
     lcd.print(".");
   }
-  
-  lcd.setCursor(0, 1);
-  Serial.println("SQL OK");  
+
   delay(1000);
+  lcd.setCursor(0, 1);
   lcd.clear();
   first = true;
   lcd.setCursor(0, 0);
@@ -104,10 +106,10 @@ void setup(){
   
   server.begin(); 
   lcd.setCursor(0, 0);
-  lcd.print("Server started");
+  lcd.print("REST STARTED");
   lcd.setCursor(0, 1);
   lcd.print(WiFi.localIP());
-  delay(1000);
+  delay(2000);
   lcd.clear();
 }
 
@@ -137,10 +139,18 @@ void writeLCD()
   getTemperature();
  
   lcd.setCursor(0, 0);
-  lcd.print("HUMIDITY: ");
+  lcd.print("HUMIDITY:");
   lcd.print((int)Humidity);
   lcd.print("%");
 
+  if(WiFi.status() != WL_CONNECTED){
+        lcd.print("!W");
+      }
+      else{
+        lcd.print("  ");
+      }
+      
+      
   lcd.setCursor(0, 1);
   lcd.print("OUT:");
   lcd.print((int)T_OUT);
@@ -148,6 +158,12 @@ void writeLCD()
   lcd.print("IN:");
   lcd.print((int)T_IN);
   lcd.print("C ");
+   if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){
+        lcd.print("!D");
+      }
+      else{
+        lcd.print("  ");
+      }
 }
 
 void sendquery(){
@@ -159,13 +175,9 @@ void sendquery(){
  if(WiFi.status() != WL_CONNECTED){
         return;
       }
-      else{
-      }
-    
-      if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){
+      
+if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){
         return;
-      }
-      else{
       }
 
     timing=millis();
@@ -195,4 +207,3 @@ void restapi(){
   }
   rest.handle(client);
 }
-
