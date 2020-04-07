@@ -8,6 +8,8 @@
 #include <ESP8266WiFi.h> //WIFI ESP8266 lib
 #include <WiFiClient.h> //WIFI Client lib
 #include <aREST.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #define DT 14 //IN Temperature
 #define DHTPIN 2 //OUT Temperature
@@ -16,8 +18,15 @@
 DHT dht(DHTPIN, DHTTYPE);
 OneWire oneWire_DT(DT);
 DallasTemperature DS18B20_DT(&oneWire_DT);
-LiquidCrystal_I2C lcd(0x27, 16, 2);  
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+ 
 aREST rest = aREST(); 
+
+WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
+NTPClient timeClient(ntpUDP,"pool.ntp.org");
+String date_time;
 
 float T_IN;
 float Humidity;
@@ -37,7 +46,7 @@ char mysql_user[] = "kutum";           // MySQL user
 char mysql_password[] = "myofrene";       // MySQL password
 unsigned long timing;
 bool first;
-
+bool blinker = false;
 
 void getTemperature() {
   do {
@@ -64,9 +73,10 @@ void setup(){
   DS18B20_DT.begin();  
 
   lcd.setCursor(0, 0);
-  lcd.print("HELLO <3");
-  
-  delay(1000);
+  lcd.print("    ESP8266");
+  lcd.setCursor(0, 1);
+  lcd.print("  METEOSTATION");
+  delay(5000);
   lcd.clear();
 
   lcd.setCursor(0, 0);
@@ -111,6 +121,9 @@ void setup(){
   lcd.print(WiFi.localIP());
   delay(2000);
   lcd.clear();
+
+  timeClient.begin();
+  timeClient.setTimeOffset(14400);
 }
 
 void loop(){
@@ -137,11 +150,26 @@ void writeLCD()
    Function write info to LCD screen
   */
   getTemperature();
- 
+
+  timeClient.update();
+
+  int hh = timeClient.getHours();
+  int mm = timeClient.getMinutes();
+
   lcd.setCursor(0, 0);
-  lcd.print("HUMIDITY:");
+  if (hh<10){
+    lcd.print("0");
+  }
+  lcd.print(hh);
+  lcd.print(":");
+  if (mm<10){
+    lcd.print("0");
+  }
+  lcd.print(mm);
+  lcd.print("   ");
+  lcd.print("H:");
   lcd.print((int)Humidity);
-  lcd.print("%");
+  lcd.print("% ");
 
   if(WiFi.status() != WL_CONNECTED){
         lcd.print("!W");
@@ -149,12 +177,12 @@ void writeLCD()
       else{
         lcd.print("  ");
       }
-      
-      
+
   lcd.setCursor(0, 1);
   lcd.print("OUT:");
   lcd.print((int)T_OUT);
   lcd.print("C ");
+  lcd.setCursor(8, 1);
   lcd.print("IN:");
   lcd.print((int)T_IN);
   lcd.print("C ");
@@ -164,6 +192,17 @@ void writeLCD()
       else{
         lcd.print("  ");
       }
+      
+ lcd.setCursor(15, 0);
+ if (blinker == false){
+    
+    lcd.print("#");
+    blinker = true;
+ }
+ else{
+    lcd.print(" ");
+    blinker = false;
+ }
 }
 
 void sendquery(){
