@@ -48,6 +48,7 @@ unsigned long timing;
 bool first;
 bool blinker = false;
 
+
 void getTemperature() {
   do {
     DS18B20_DT.requestTemperatures();
@@ -58,8 +59,13 @@ void getTemperature() {
   T_OUT = dht.readTemperature();   //Outside temperature
 }
 
-void setup(){
+byte sun[8] = {B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111};
+byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000};
+byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};
+byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};
 
+void setup(){
+  
   /*
    First initialize serial, lcd screen, DT11, DS18B20, WIFI Connection, SQL Connection
    */
@@ -124,6 +130,11 @@ void setup(){
 
   timeClient.begin();
   timeClient.setTimeOffset(14400);
+  
+  lcd.createChar(1, sun);
+  lcd.createChar(2, house);
+  lcd.createChar(3, humidity);
+  lcd.createChar(4, celsium);
 }
 
 void loop(){
@@ -150,59 +161,71 @@ void writeLCD()
    Function write info to LCD screen
   */
   getTemperature();
-
   timeClient.update();
 
   int hh = timeClient.getHours();
   int mm = timeClient.getMinutes();
-
+ 
   lcd.setCursor(0, 0);
+
   if (hh<10){
     lcd.print("0");
   }
+  
   lcd.print(hh);
-  lcd.print(":");
+
+  if(blinker == false){
+      lcd.print(":");
+      blinker = true;
+   }
+   else{
+      lcd.print(" ");
+      blinker = false;
+   }
+  
+  //lcd.print(":");
+  
   if (mm<10){
     lcd.print("0");
   }
   lcd.print(mm);
-  lcd.print("   ");
-  lcd.print("H:");
-  lcd.print((int)Humidity);
-  lcd.print("% ");
-
-  if(WiFi.status() != WL_CONNECTED){
-        lcd.print("!W");
-      }
-      else{
-        lcd.print("  ");
-      }
-
+  lcd.print(" ");
+  lcd.print(getDate());
+  
   lcd.setCursor(0, 1);
-  lcd.print("OUT:");
+
+  lcd.write(byte(3));
+  lcd.print((int)Humidity);
+  lcd.print("%");
+
+  lcd.setCursor(6, 1);
+  lcd.write(byte(1));
   lcd.print((int)T_OUT);
-  lcd.print("C ");
-  lcd.setCursor(8, 1);
-  lcd.print("IN:");
-  lcd.print((int)T_IN);
-  lcd.print("C ");
-   if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){
-        lcd.print("!D");
-      }
-      else{
-        lcd.print("  ");
-      }
-      
- lcd.setCursor(15, 0);
- if (blinker == false){
-    
-    lcd.print("#");
-    blinker = true;
- }
- else{
+  if(T_OUT<10){
+    lcd.setCursor(8, 1);
+    lcd.write(byte(4));
     lcd.print(" ");
-    blinker = false;
- }
+  }
+  else{
+    lcd.setCursor(9, 1);
+    lcd.write(byte(4));
+  }
+  
+  
+  lcd.setCursor(12, 1);
+  lcd.write(byte(2));
+  lcd.print((int)T_IN);
+  if(T_IN<10){
+    lcd.setCursor(14, 1);
+    lcd.write(byte(4));
+    lcd.print(" ");
+  }
+  else{
+    lcd.setCursor(15, 1);
+    lcd.write(byte(4));
+  }
+  
+
 }
 
 void sendquery(){
@@ -245,4 +268,21 @@ void restapi(){
     delay(1);
   }
   rest.handle(client);
+}
+
+String getDate() {
+   time_t rawtime = timeClient.getEpochTime();
+   struct tm * ti;
+   ti = localtime (&rawtime);
+
+   uint16_t year = ti->tm_year + 1900;
+   String yearStr = String(year);
+
+   uint8_t month = ti->tm_mon + 1;
+   String monthStr = month < 10 ? "0" + String(month) : String(month);
+
+   uint8_t day = ti->tm_mday;
+   String dayStr = day < 10 ? "0" + String(day) : String(day);
+
+   return dayStr + "." + monthStr + "." + yearStr/*.substring(2,4)*/;
 }
