@@ -1,180 +1,172 @@
-// Include LIBS
-#include <LiquidCrystal_I2C.h> //LCD lib
-#include "DHT.h"  //DHT11 lib
-#include <OneWire.h> 
-#include <DallasTemperature.h> //DT802 lib
-#include <MySQL_Connection.h> //SQL Connection lib
-#include <MySQL_Cursor.h> //SQL query lib
-#include <ESP8266WiFi.h> //WIFI ESP8266 lib
-#include <WiFiClient.h> //WIFI Client lib
-#include <aREST.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <LiquidCrystal_I2C.h>                          //Библиотека поддержки дисплея A1602
+#include "DHT.h"                                        //Библиотека для работы с датчиком температуры DHT11 (датчик на корпусе)
+#include <OneWire.h>                                    //Библиотека шина связи для датчика DHT11
+#include <DallasTemperature.h>                          //Библиотека для работы с датчиком температуры и влажности DS18B20              
+#include <MySQL_Connection.h>                           //Библиотека для подключения к MySQL БД
+#include <MySQL_Cursor.h>                               //Библиотека для работы с запросами MySQL БД
+#include <ESP8266WiFi.h>                                //Библиотека для подключения к WiFi 
+#include <WiFiClient.h>                                 //Библиотека для работы в сети как клиент
+#include <aREST.h>                                      //Библиотека для обработки REST запросов
+#include <NTPClient.h>                                  //Библиотека для получения даты и времени через интернет
+#include <WiFiUdp.h>                                    //Библиотека для работы с UDP-пакетами
 
-#define DT 14 //IN Temperature
-#define DHTPIN 2 //OUT Temperature
-#define DHTTYPE DHT11 
+#define DT 14                                           //Датчик на корпусе DHT11 
+#define DHTPIN 2                                        //Выносной датчик температуры и влажности DS18B20 
 
-DHT dht(DHTPIN, DHTTYPE);
-OneWire oneWire_DT(DT);
-DallasTemperature DS18B20_DT(&oneWire_DT);
+OneWire oneWire_DT(DT);                                 //Инициализируем шину связи для DHT11
+DallasTemperature DS18B20_DT(&oneWire_DT);              //Инициализируем датчик DS18B20
+DHT dht(DHTPIN, DHT11);                                 //Инициализируем датчик DS18B20 на 2 пине
+LiquidCrystal_I2C lcd(0x27, 16, 2);                     //Инициализируем экран с размером 16 "ячеек" в ширину, 2 в высоту с адресом 0x27
+aREST rest = aREST();                                   //Инициализируем сервис REST для обработки запросов по API
+WiFiUDP ntpUDP;                                         //Инициализируем обработчика UDP пакетов для получения и расшифровки даты и времени
+NTPClient timeClient(ntpUDP,"pool.ntp.org");            //Инициализируем "клиента времени" который берёт дату и время с сервера pool.ntp.org
+WiFiServer server(80);                                  //Инициализируем веб-сервер, на котором будет крутиться REST сервис
+WiFiClient client;                                      //Инициализируем клиента подключения
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); 
- 
-aREST rest = aREST(); 
+float T_IN;                                             //Переменная со значением температуры с DHT11 (комнатная)
+float Humidity;                                         //Переменная со значением влажности
+float T_OUT;                                            //Переменная со значением температуры с DS18B20
 
-WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
-NTPClient timeClient(ntpUDP,"pool.ntp.org");
-String date_time;
-
-float T_IN;
-float Humidity;
-float T_OUT;
-
-char ssid[] = "xiaomi_kutuck";                 // Network Name
-char pass[] = "myofrene";                 // Network Password
-byte mac[6];
-
-WiFiServer server(80);
-WiFiClient client;
-
-MySQL_Connection conn((Client *)&client);
-char query[128];
-IPAddress mysql_ip(192, 168 ,1, 5);          // MySQL server IP
-char mysql_user[] = "kutum";           // MySQL user
-char mysql_password[] = "myofrene";       // MySQL password
-unsigned long timing;
-bool first;
-bool blinker = false;
+char ssid[] = "xiaomi_kutuck";                          //Имя WiFi сети к которой подключаемся
+char pass[] = "myofrene";                               //Пароль WiFi сети
 
 
-void getTemperature() {
+MySQL_Connection conn((Client *)&client);               //Инициализация клиента подключения к MySQL
+IPAddress mysql_ip(192, 168 ,1, 5);                     //IP адрес сервера MySQL 
+char mysql_user[] = "kutum";                            //Пользователь MySQL
+char mysql_password[] = "myofrene";                     //Пароль MySQL
+char query[128];                                        //Переменная для хранения запроса к БД
+
+unsigned long timing;                                   //Переменная "времени", для выполнения операций циклично в определённое время
+
+bool first = true;                                             //Переменная "первого" запуска
+bool blinker = false;                                   //Переменная для "мигания" двоеточием на часах
+
+
+void getTemperature() {                                 //Функция получения температуры с датчиков
   do {
-    DS18B20_DT.requestTemperatures();
-    T_IN = DS18B20_DT.getTempCByIndex(0); //Inside temperature
+    DS18B20_DT.requestTemperatures();                   //Запрос к датчику DT11
+    T_IN = DS18B20_DT.getTempCByIndex(0);               //Записываем температуру в целисиях
   } while (T_IN == 85.0);
 
-  Humidity = dht.readHumidity(); //Humidity
-  T_OUT = dht.readTemperature();   //Outside temperature
+  Humidity = dht.readHumidity();                        //Получаем влажность с датчика DS18B20
+  T_OUT = dht.readTemperature();                        //Получаем температуру с датчика DS18B20 
 }
 
-byte sun[8] = {B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111};
-byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000};
-byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};
-byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};
+byte sun[8] = {B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111};       //Символ "улица" для внешней температуры
+byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000};     //Символ "домик" для комнатной температуры
+byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};  //Символ "капля" для влажности
+byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};   //Символ градуса цельсия 
 
-void setup(){
+void setup(){                                           //Инициализация при запуске контроллера
   
-  /*
-   First initialize serial, lcd screen, DT11, DS18B20, WIFI Connection, SQL Connection
-   */
+  Serial.begin(115200);                                 //Инициализация последовательного порта
+  
+  lcd.init();                                           //Включение дисплея
+  lcd.backlight();                                      //Включение подсветки дисплея
+  
+  dht.begin();                                          //Инициализация датчика комнатной температуры
+  DS18B20_DT.begin();                                   //Инициализация датчика улицы
 
-  Serial.begin(115200);
-  
-  lcd.init();                  
-  lcd.backlight();
-  
-  dht.begin(); 
-  DS18B20_DT.begin();  
-
-  lcd.setCursor(0, 0);
-  lcd.print("    ESP8266");
+  lcd.setCursor(0, 0);                                  //Задание начала "курсора" экрана (0(1) строка, 0(1) столбец)
+  lcd.print("     ESP8266    ");                        //Вывод текста на экран
   lcd.setCursor(0, 1);
-  lcd.print("  METEOSTATION");
-  delay(5000);
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print("CONNECTING WIFI");
-  lcd.setCursor(0, 1);
-  lcd.print(ssid);
-  delay(1000);
-  lcd.clear();
+  lcd.print("  METEOSTATION  ");
+  delay(5000);                                          //Задержка
   
-  WiFi.begin(ssid, pass);
+
+
+  lcd.setCursor(0, 0);                                
+  lcd.print("CONNECTING WIFI ");                        
+  lcd.setCursor(0, 1);
+  lcd.print(ssid);                                      //Вывод на экран названия сети WiFi, к которой подлючаемся
+  lcd.print(" ");
+  delay(2000);
+  
+  WiFi.begin(ssid, pass);                               //Инициализируем подключение к сети с именем ssid и паролем pass
+  while (WiFi.status() != WL_CONNECTED){                //Пытаемся подключиться к сети, если не выходит печатаем точку каждые 0,1с на каждую попытку                
+        lcd.print(".");
+        delay(100);
+      }
+      
   lcd.setCursor(0, 0);
-  lcd.print("WIFI CONNECTED");
+  lcd.print(" WIFI CONNECTED ");                        //Если подключились сигнализируем об этом 
   delay(1000);
-  lcd.clear();
+  lcd.clear();                                          //Очищаем дисплей
   
   lcd.setCursor(0, 0);
   lcd.print("CONNECTING TO DB");
   lcd.setCursor(0, 1);
-  lcd.print(mysql_ip);
-  while (conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true) {
-    delay(100);
+  lcd.print(mysql_ip);                                  //Выводим IP адрес сервера базы данных 
+  lcd.print(" ");
+  while (conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true) {  //Предпринимаем попытки подключиться к базе данных
     lcd.print(".");
+    delay(100);
   }
 
   delay(1000);
   lcd.setCursor(0, 1);
+  lcd.print("CONNECTED TO DB ");
   lcd.clear();
-  first = true;
-  lcd.setCursor(0, 0);
-  lcd.print("STARTING");
-
-  rest.variable("T_IN", &T_IN);                    
-  rest.variable("T_OUT", &T_OUT); 
-  rest.variable("Humidity", &Humidity); 
-  rest.set_id("1");                                              
-  rest.set_name("esp8266");    
   
-  server.begin(); 
-  lcd.setCursor(0, 0);
+                                                              //Инициализация переменных для REST API  
+  rest.variable("T_IN", &T_IN);                               //Внутренняя температура                                                                        
+  rest.variable("T_OUT", &T_OUT);                             //Наружняя температура
+  rest.variable("Humidity", &Humidity);                       //Влажность воздуха
+  rest.set_id("1");                                           //ID контроллера (на случай если используется больше одного, нужно их пронумеровать для удобства                                             
+  rest.set_name("esp8266");                                   //Имя контроллера
+  
+  server.begin();                                             //Запускаем веб-сервер             
+                      
+  lcd.setCursor(0, 0);                                
   lcd.print("REST STARTED");
   lcd.setCursor(0, 1);
-  lcd.print(WiFi.localIP());
-  delay(2000);
+  lcd.print(WiFi.localIP());                                  //Выводим присвоенный IP адрес веб-сервера, по которому можно будет обратиться к контроллеру
+  delay(3000);
   lcd.clear();
 
-  timeClient.begin();
-  timeClient.setTimeOffset(14400);
+  timeClient.begin();                                         //Запуск клиента даты и времени
+  timeClient.setTimeOffset(14400);                            //Установка часового пояса (в данном случае GMT+4, где одна единица GMT равна 3600 итого 3600*4=14400)
   
-  lcd.createChar(1, sun);
-  lcd.createChar(2, house);
-  lcd.createChar(3, humidity);
-  lcd.createChar(4, celsium);
+  lcd.createChar(1, sun);                                     //Создаём символ "улица"
+  lcd.createChar(2, house);                                   //Создаём символ "дом"
+  lcd.createChar(3, humidity);                                //Создаём символ "капля"
+  lcd.createChar(4, celsium);                                 //Создаём символ "градус цельсия"
 }
 
-void loop(){
+void loop(){                                                  //Функция, которая вызывается циклично на каждый такт процессора
+
+  writeLCD();                                                 //Функция вывода показаний на экран                     
+  restapi();                                                  //Функция обработки REST API запросов
   
-  
-  if (first == true){
+  if (first == true){                                         //Если это первый цикл (контроллер только включили в сеть) то сразу отправляем показания датчиков на сервер, чтобы не ждать 10 минут (полезно для отладки, но не практично поскольку при старте датчики немного врут
     sendquery();
   }
   
-  if(millis() - timing >= 600000) { //10 min = 600000
-
-   sendquery();
-  }
-  first = false;
-   
-  delay(1000);
-  writeLCD();
-  restapi();
-}
-
-void writeLCD()
-{
-  /*
-   Function write info to LCD screen
-  */
-  getTemperature();
-  timeClient.update();
-
-  int hh = timeClient.getHours();
-  int mm = timeClient.getMinutes();
- 
-  lcd.setCursor(0, 0);
-
-  if (hh<10){
-    lcd.print("0");
+  if(millis() - timing >= 600000) { //10 min = 600000         //Запускаем отправку показаний датчиков в БД каждые 10 минут
+    sendquery();
   }
   
-  lcd.print(hh);
+  first = false;                                              //Запоминаем что первый запуск прошёл, далее будет каждые 10 минут
+                                              
+  delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
+}
 
-  if(blinker == false){
+void writeLCD()                                               //Функция вывода значений на экран
+{
+  getTemperature();                                           //Получаем показания с датчиков в глобальные переменные
+  timeClient.update();                                        //Обновляем показания даты и времени от сервера в сети
+
+  int hh = timeClient.getHours();                             //Часов
+  int mm = timeClient.getMinutes();                           //Минут
+ 
+  lcd.setCursor(0, 0);
+  if (hh<10){                                                 //Добавляем к часу впереди "0" если часов меньше 10
+    lcd.print("0");
+  }
+  lcd.print(hh);                                              //Выводим час
+
+  if(blinker == false){                                       //Этим условием заставляем мигать у часов двоеточие, чтобы создать иллюзию того что часы "идут"
       lcd.print(":");
       blinker = true;
    }
@@ -182,40 +174,35 @@ void writeLCD()
       lcd.print(" ");
       blinker = false;
    }
-  
-  //lcd.print(":");
-  
-  if (mm<10){
+
+  if (mm<10){                                                 //Добавляем к минутам впереди "0" если минут меньше 10
     lcd.print("0");
   }
-  lcd.print(mm);
+  lcd.print(mm);                                              //Выводим минуты
   lcd.print(" ");
-  lcd.print(getDate());
+  lcd.print(getDate());                                       //Получаем дату и сразу выводим её отступая на пробел от времени
   
-  lcd.setCursor(0, 1);
-
-  lcd.write(byte(3));
-  lcd.print((int)Humidity);
+  lcd.setCursor(0, 1);                                        //Переходим на вторую строку
+  lcd.write(byte(3));                                         //Печатаем "каплю"
+  lcd.print((int)Humidity);                                   //Печатаем процент влажности воздуха
   lcd.print("%");
-
-  lcd.setCursor(6, 1);
-  lcd.write(byte(1));
-  lcd.print((int)T_OUT);
-  if(T_OUT<10){
+  lcd.setCursor(6, 1);                                        
+  lcd.write(byte(1));                                         //Печатаем символ "улица"
+  lcd.print((int)T_OUT);                                      //Показатель температуры на улице
+  if(T_OUT<10){                                               //Этим условием заставляем символ градуса цельсия "прилипнуть" к значению. Если цифра в числе одна, то печатаем в 8 ячейке и стираем в 9
     lcd.setCursor(8, 1);
     lcd.write(byte(4));
     lcd.print(" ");
   }
   else{
-    lcd.setCursor(9, 1);
+    lcd.setCursor(9, 1);                                     //Если две цифры в числе, то в 9
     lcd.write(byte(4));
   }
-  
-  
+ 
   lcd.setCursor(12, 1);
-  lcd.write(byte(2));
-  lcd.print((int)T_IN);
-  if(T_IN<10){
+  lcd.write(byte(2));                                        //Печатаем символ "дом"
+  lcd.print((int)T_IN);                                      //Печатаем температуру в комнате
+  if(T_IN<10){                                               //Смотри аналогичное условие как и для внешней температуры
     lcd.setCursor(14, 1);
     lcd.write(byte(4));
     lcd.print(" ");
@@ -224,54 +211,47 @@ void writeLCD()
     lcd.setCursor(15, 1);
     lcd.write(byte(4));
   }
-  
-
 }
 
-void sendquery(){
-
-/*
-  Function write info to DataBase over WiFi connection
-*/
-
- if(WiFi.status() != WL_CONNECTED){
+void sendquery(){                                            //Функция отправки данных в базу данных
+  
+ if(WiFi.status() != WL_CONNECTED){                         //Проверяем наличие WIFI подключения, если такового не имеется то выходим из функции
         return;
       }
       
-if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){
+if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){ //Проверяем наличие подключения к БД, если такового не имеется выходим из функции
         return;
       }
 
-    timing=millis();
+    timing=millis();                                        //Запоминаем время
+    getTemperature();                                       //Получаем показания с датчиков
     
-    getTemperature();
+    char INSERT_SQL[] = "INSERT INTO ESP8266.WEATHER (DATETIME,VAL1,VAL2,HUMIDITY) VALUES (CURRENT_TIMESTAMP(),%f,%f,%f)"; /*Запрос для записи данных в таблицу WEATHER в базе данных MySQL. 
+                                                                                                                            Данная таблица имеет 5 столбцов: ID - ключевое, VAL1 - наружняя температура,
+                                                                                                                            VAL2 - внутренняя температура, HUMIDITY - влажность воздуха*/
+    sprintf(query, INSERT_SQL, T_OUT,T_IN,Humidity);        //Конвертирование данных в строку 
+    Serial.println(query);                                  //Вывод запроса в серийный порт (для отладки)
     
-    char INSERT_SQL[] = "INSERT INTO ESP8266.WEATHER (DATETIME,VAL1,VAL2,HUMIDITY) VALUES (CURRENT_TIMESTAMP(),%f,%f,%f)";
-    sprintf(query, INSERT_SQL, T_OUT,T_IN,Humidity);
-    Serial.println(query);
-    
-    MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);
-    cur_mem->execute(query);
+    MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);        //Инициализируем курсор для отправки запроса
+    cur_mem->execute(query);                                //Выполняем запрос к БД
 
-    delete cur_mem;
-    
-    writeLCD();
+    delete cur_mem;                                         //Удаляем курсор
 }
 
-void restapi(){
+void restapi(){                                             //функция обработки REST API запросов
 
-  WiFiClient client = server.available();
-  if (!client) {
+  WiFiClient client = server.available();                   //Инициализация клиентов
+  if (!client) {                                            //Если подключенных клиентов нет, то выходим из функции                                       
     return;
   }
-  while (!client.available()) {
+  while (!client.available()) {                             //TODO: Зачем ждать 1 мс не доступного клиента?                       
     delay(1);
   }
-  rest.handle(client);
+  rest.handle(client);                                      //Обработка запроса с клиента
 }
 
-String getDate() {
-   time_t rawtime = timeClient.getEpochTime();
+String getDate() {                                          //Функция получения даты в формате ДД.ММ.ГГГГ
+   time_t rawtime = timeClient.getEpochTime();              //Получаем дату
    struct tm * ti;
    ti = localtime (&rawtime);
 
