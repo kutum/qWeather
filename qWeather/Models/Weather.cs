@@ -12,5 +12,6 @@ namespace qWeather.Models
         public DateTime DATETIME { get; set; }
         public float VAL1 { get; set; }
         public float VAL2 { get; set; }
+        public float? HUMIDITY { get; set; }
     }
 }
