@@ -10,19 +10,7 @@ namespace qWeather.Controllers
     {
         public ActionResult Index()
         {
-            return View(GraphData());
-        }
-
-        public List<Weather> GraphData()
-        {
-            List<Weather> weather = new List<Weather>();
-           
-            using (var context = new WeatherDbContext())
-            {
-                weather = context.Weather.OrderByDescending(x => x.DATETIME).ToList();
-            }
-
-            return weather;
+            return View();
         }
     }
 }

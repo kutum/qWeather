@@ -21,7 +21,7 @@ namespace qWeather.Models.ESP8266
                     DATETIME = DateTime.Now,
                     VAL1 = ESPData.variables.T_OUT,
                     VAL2 = ESPData.variables.T_IN,
-                    HUMIDITY = ESPData.variables.Humidity
+                    HUMIDITY = (int)ESPData.variables.Humidity
                 });
 
                 await weatherDbcontext.SaveChangesAsync();

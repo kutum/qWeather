@@ -9,7 +9,7 @@ namespace qWeather.Models.ESP8266
     public class ESPData
     {
         public ESPSensors variables { get; set; }
-        public string id { get; set; }
+        public int id { get; set; }
         public string name { get; set; }
         public string hardware { get; set; }
         public string connected { get; set; }

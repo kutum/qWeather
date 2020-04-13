@@ -1,4 +1,7 @@
 ﻿using qWeather.Models.ESP8266;
+using System;
+using System.Web;
+using System.Web.Configuration;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
@@ -6,7 +9,7 @@ using System.Web.Routing;
 
 namespace qWeather
 {
-    public class MvcApplication : System.Web.HttpApplication
+    public class MvcApplication : HttpApplication
     {
         protected void Application_Start()
         {
@@ -16,7 +19,10 @@ namespace qWeather
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-            ESPDataStartSend.Start();
+            if (Convert.ToBoolean(WebConfigurationManager.AppSettings["ESPScheduler"]))
+            {
+                ESPDataStartSend.Start();
+            }
         }
     }
 }
