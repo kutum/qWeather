@@ -34,13 +34,10 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<Weather> GetLast()
         {
-            if (await context.Weather.AnyAsync())
-            {
-                DateTime LastDate = await context.Weather.MaxAsync(y => y.DATETIME);
-                return await context.Weather.Where(x => x.DATETIME == LastDate).OrderByDescending(x => x.DATETIME).FirstOrDefaultAsync();
-            }
-            else
-                throw new Exception("Empty database");
+
+            DateTime LastDate = await context.Weather.MaxAsync(y => y.DATETIME);
+            return await context.Weather.Where(x => x.DATETIME == LastDate).OrderByDescending(x => x.DATETIME).FirstOrDefaultAsync();
+        
         }
         
         [Route("now")]
@@ -66,30 +63,26 @@ namespace qWeather.Controllers
         [Route("average")]
         [HttpGet()]
         public async Task<WeatherAverageView> GetAverage([FromUri]DateTime start, [FromUri]DateTime end)
-        {
-            if (!await context.Weather.AnyAsync())
-            {
-                throw new Exception("Empty database");
-            }
-                var weather = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).ToListAsync();
+        {            
+            var weather = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).ToListAsync();
 
             float? insideSum = 0.0f;
             float? outsideSum = 0.0f;
+            float? humiditySum = 0.0f;
 
             foreach (var item in weather)
             {
                 insideSum += item.VAL2;
                 outsideSum += item.VAL1;
+                humiditySum += item.HUMIDITY;
             }
 
-            WeatherAverageView weatherAverageView = new WeatherAverageView() {
-                datetimefrom = start.ToString("yyyy-MM-dd HH:mm:ss"),
-                datetimeend = end.ToString("yyyy-MM-dd HH:mm:ss"),
-                insideTemp = (float)insideSum / weather.Count,
-                outsideTemp = (float)outsideSum / weather.Count
+            return new WeatherAverageView()
+            {
+                insideTemp = insideSum / weather.Count,
+                outsideTemp = outsideSum / weather.Count,
+                humidity = humiditySum / weather.Count
             };
-
-            return weatherAverageView;
         }
     }
 }

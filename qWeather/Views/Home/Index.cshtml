@@ -4,29 +4,47 @@
     ViewBag.Title = "Home Page";
 }
 
-<div class="row">
-    <div class="card col row">
-        <div class="card-body">
-            <h3 class="card-title">CURRENT</h3>
-            <div>
-                <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: inside"></div>
+    <div class="row">
+        <div class="col">
+            <div class="card row">
+                <div class="card-body">
+                    <h3 class="card-title">CURRENT</h3>
+                    <div>
+                        <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: inside"></div>
+                    </div>
+                    <div>
+                        <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outside"></div>
+                    </div>
+                    <div>
+                        <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidity"></div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outside"></div>
-            </div>
-            <div>
-                <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidity"></div>
+            <div class="card row">
+                <div class="card-body">
+                    <h3 class="card-title">AVERAGE</h3>
+                    <div>
+                        <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideAverage"></div>
+                    </div>
+                    <div>
+                        <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideAverage"></div>
+                    </div>
+                    <div>
+                        <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityAverage"></div>
+                    </div>
+                </div>
             </div>
         </div>
-        @*<div class="card row">
-
-        </div>*@
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">GRAPH</h3>
+                    <div style="border:1px" data-bind="googleChartTemp: { chartType: 'Line', legend: true }"></div>
+                    <div data-bind="googleChartHumidity: { chartType: 'Line', legend: true }"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col">
-        <div data-bind="googleChartTemp: { chartType: 'Line', legend: true }"></div>
-        <div data-bind="googleChartHumidity: { chartType: 'Line', legend: true }"></div>
-    </div>
-</div>
 
 
 
@@ -39,7 +57,10 @@
             weather: ko.observableArray(),
             outside: ko.observable(),
             inside: ko.observable(),
-            humidity: ko.observable()
+            humidity: ko.observable(),
+            outsideAverage: ko.observable(),
+            insideAverage: ko.observable(),
+            humidityAverage: ko.observable()
         };
         
         function getTodayString(date) {
@@ -66,6 +87,15 @@
                 model.humidity(data.HUMIDITY);
             }, "last");
         }
+
+        function getAverage() {
+            sendAjaxRequest("GET", function (data) {
+                model.outsideAverage((data.insideTemp).toFixed(1));
+                model.insideAverage((data.outsideTemp).toFixed(1));
+                model.humidityAverage((data.humidity).toFixed(1));
+            }, "average" + getTodayString(new Date()));
+        }
+
 
         function sendAjaxRequest(httpMethod, callback, url, reqData) {
             $.ajax("/api" + (url ? "/" + url : ""), {
@@ -171,6 +201,7 @@
         $(window).on('load', function () {
             getToday();
             getLast();
+            getAverage();
             ko.applyBindings(model);
         });
            
