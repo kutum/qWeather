@@ -1,5 +1,5 @@
 ﻿@model List<qWeather.Models.Weather>
-
+@using System.Web.Configuration;
 @{
     ViewBag.Title = "Home Page";
 }
@@ -98,7 +98,10 @@
 
 
         function sendAjaxRequest(httpMethod, callback, url, reqData) {
-            $.ajax("/api" + (url ? "/" + url : ""), {
+
+            var pathtoapi ="@WebConfigurationManager.AppSettings["pathtoapi"]";
+
+            $.ajax(pathtoapi + (url ? "/" + url : ""), {
                 type: httpMethod,
                 success: callback,
                 data: JSON.stringify(reqData),

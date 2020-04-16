@@ -1,5 +1,7 @@
 ﻿using Quartz;
 using Quartz.Impl;
+using System;
+using System.Web.Configuration;
 
 namespace qWeather.Models.ESP8266
 {
@@ -12,10 +14,12 @@ namespace qWeather.Models.ESP8266
 
             IJobDetail job = JobBuilder.Create<ESPDataSender>().Build();
 
+            var interval = int.Parse(WebConfigurationManager.AppSettings["InsertIntervalMinutes"]);
+
             ITrigger trigger = TriggerBuilder.Create()
                     .WithIdentity("trigger1", "group1")
                     .StartNow()
-                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(10).RepeatForever())
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(interval).RepeatForever())
                     .Build();
 
             await scheduler.ScheduleJob(job, trigger);
