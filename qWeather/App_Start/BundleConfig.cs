@@ -16,8 +16,8 @@ namespace qWeather
             bundles.Add(new ScriptBundle("~/bundles/knockout").Include(
                         "~/Scripts/knockout-3.5.1.js"));
 
-            bundles.Add(new ScriptBundle("~/bundles/gchartsloader").Include(
-                        "~/Scripts/gchartsloader.js"));
+            bundles.Add(new ScriptBundle("~/bundles/chartjs").Include(
+                        "~/Scripts/Chart.js"));
 
             // Используйте версию Modernizr для разработчиков, чтобы учиться работать. Когда вы будете готовы перейти к работе,
             // готово к выпуску, используйте средство сборки по адресу https://modernizr.com, чтобы выбрать только необходимые тесты.

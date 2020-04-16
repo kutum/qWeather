@@ -27,7 +27,7 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<IEnumerable<Weather>> Get([FromUri]DateTime start, [FromUri]DateTime end)
         {
-            return await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderByDescending(x => x.DATETIME).ToListAsync();
+            return await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x => x.DATETIME).ToListAsync();
         }
 
         [Route("last")]
@@ -64,7 +64,7 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<WeatherAverageView> GetAverage([FromUri]DateTime start, [FromUri]DateTime end)
         {            
-            var weather = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).ToListAsync();
+            var weather = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x=>x.DATETIME).ToListAsync();
 
             float? insideSum = 0.0f;
             float? outsideSum = 0.0f;

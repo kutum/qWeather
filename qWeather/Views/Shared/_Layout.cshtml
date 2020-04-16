@@ -7,20 +7,17 @@
     <title>qWeather</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    
 </head>
 <body>
-    @*<nav class="navbar navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">qWeather</a>
-    </nav>*@
-
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @Scripts.Render("~/bundles/knockout")
-    @Scripts.Render("~/bundles/gchartsloader")
+    @Scripts.Render("~/bundles/chartjs")
     @RenderSection("scripts", required: false)
 
-    <div class="container body-content">
+    <div class="container ">
         @RenderBody()
     </div>
 </body>

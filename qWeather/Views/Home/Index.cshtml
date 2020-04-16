@@ -3,11 +3,11 @@
 @{
     ViewBag.Title = "Home Page";
 }
-
+<br />
     <div class="row">
         <div class="col">
-            <div class="card row">
-                <div class="card-body">
+            <div class="card row" >
+                <div class="card-body" >
                     <h3 class="card-title">CURRENT</h3>
                     <div>
                         <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: inside"></div>
@@ -20,6 +20,7 @@
                     </div>
                 </div>
             </div>
+            <br />
             <div class="card row">
                 <div class="card-body">
                     <h3 class="card-title">AVERAGE</h3>
@@ -39,16 +40,13 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="card-title">GRAPH</h3>
-                    <div style="border:1px" data-bind="googleChartTemp: { chartType: 'Line', legend: true }"></div>
-                    <div data-bind="googleChartHumidity: { chartType: 'Line', legend: true }"></div>
+                    <canvas width="800" height="255" data-bind="ChartTemp"></canvas>
+                    <br />
+                    <canvas width="800" height="255" data-bind="ChartHumidity"></canvas>
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
 
 @section Scripts {
     <script>
@@ -82,10 +80,10 @@
 
         function getLast() {
             sendAjaxRequest("GET", function (data) {
-                model.outside(data.VAL1);
-                model.inside(data.VAL2);
+                model.outside((data.VAL1).toFixed(1));
+                model.inside((data.VAL2).toFixed(1));
                 model.humidity(data.HUMIDITY);
-            }, "last");
+            }, "now");
         }
 
         function getAverage() {
@@ -111,102 +109,112 @@
             });
         }
 
-        google.charts.load('current', {
-            'packages': ['line'],
-            ignoreWindowOnLoad: true });
+        window.chartColors = {
+            red: 'rgb(255, 99, 132)',
+            orange: 'rgb(255, 159, 64)',
+            yellow: 'rgb(255, 205, 86)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(54, 162, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        };
 
-        ko.bindingHandlers.googleChartHumidity = {
-
+        ko.bindingHandlers.ChartTemp = {
             update: function (element, valueAccessor, allBindingsAccesor, viewModel, bindingContext) {
 
-                if (viewModel.weather().length == 0) return;
+                if (this.charttemp) {
+                    this.charttemp.destroy();
+                    delete this.charttemp;
+                }
 
-                var chart = new google.charts.Line(element);
-                var data = new google.visualization.DataTable();
-
-                data.addColumn('date', 'Date Time');
-                data.addColumn('number', 'Humidity');
-
-                var dataArray = [];
+                var dataArrayOut = [];
+                var dataArrayIn = [];
+                var dataLabels = []; 
 
                 for (var i = 0; i < viewModel.weather().length; i++) {
                     var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
-                    dataArray.push([thisdate, viewModel.weather()[i].HUMIDITY]);
+                    dataArrayOut.push(viewModel.weather()[i].VAL1);
+                    dataArrayIn.push(viewModel.weather()[i].VAL2);
+                    dataLabels.push(thisdate.toLocaleTimeString().substring(0,5));
                 }
-
-                data.addRows(dataArray);
-
-                var options = {
-                    chart: {
-                        title: 'Humidity',
-                        subtitle: getcurrentDate(new Date()).toString()
+           
+                var ctx = element.getContext('2d');
+                this.charttemp = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dataLabels,
+                        datasets: [
+                            {
+                                label: 'Outside',
+                                borderColor: window.chartColors.blue,
+                                backgroundColor: window.chartColors.blue,
+                                fill: false,
+                                data: dataArrayOut
+                            },
+                            {
+                                label: 'Inside',
+                                borderColor: window.chartColors.red,
+                                backgroundColor: window.chartColors.red,
+                                fill: false,
+                                data: dataArrayIn
+                            }
+                        ],
+                        fill:false
                     },
-                    width: 900,
-                    height: 300,
-                    series: {
-                        0: { axis: 'Humidity' }
-                    },
-                    axes: {
-                        y: {
-                            Humidity: { label: 'Humidity %' }
-                        }
-                    }
-                };
 
-                chart.draw(data, options);
+                    options: { }
+                });
             }
         }
 
-        ko.bindingHandlers.googleChartTemp = {
+        ko.bindingHandlers.ChartHumidity = {
             update: function (element, valueAccessor, allBindingsAccesor, viewModel, bindingContext) {
 
-                if (viewModel.weather().length == 0) return;
+                if (this.charthumidity) {
+                    this.charthumidity.destroy();
+                    delete this.charthumidity;
+                }
 
-                var chart = new google.charts.Line(element);
-                var data = new google.visualization.DataTable();
-
-                data.addColumn('date', 'Date Time');
-                data.addColumn('number', 'Outside_C');
-                data.addColumn('number', 'Inside_C')
-
-                var dataArray = [];
+                var dataLabels = [];
+                var dataArrayHumidity = [];
+                
 
                 for (var i = 0; i < viewModel.weather().length; i++) {
                     var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
-                    dataArray.push([thisdate, viewModel.weather()[i].VAL1, viewModel.weather()[i].VAL2]);
+                    dataArrayHumidity.push(viewModel.weather()[i].HUMIDITY);
+                    dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
                 }
 
-                data.addRows(dataArray);
-
-                var options = {
-                    chart: {
-                        title: 'Temperatures',
-                        subtitle: getcurrentDate(new Date()).toString()
+                var ctx = element.getContext('2d');
+                this.charthumidity = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dataLabels,
+                        datasets: [
+                            {
+                                label: 'Humidity %',
+                                borderColor: window.chartColors.purple,
+                                backgroundColor: window.chartColors.purple,
+                                fill: false,
+                                data: dataArrayHumidity
+                            }
+                        ],
+                        fill: false
                     },
-                    width: 900,
-                    height: 300,
-                    series: {
-                        0: { axis: 'Outside C' },
-                        1: {axis: 'Inside C'}
-                    },
-                    axes: {
-                        y: {
-                            Outside_C: { label: 'Outside C' },
-                            Inside_C: {label: 'Inside C'}
-                        }
-                    }
-                };
 
-                chart.draw(data, options);
+                    options: {}
+                });
             }
         }
 
-        $(window).on('load', function () {
+        
+        $(document).ready(function () {
             getToday();
             getLast();
             getAverage();
             ko.applyBindings(model);
+            
         });
-           
+        
     </script>
 }
