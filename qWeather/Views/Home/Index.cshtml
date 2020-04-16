@@ -78,13 +78,15 @@
             });
         }
 
-        google.charts.load('current', { 'packages': ['line', 'corechart'] });
+        google.charts.load('current', {
+            'packages': ['line'],
+            ignoreWindowOnLoad: true });
 
         ko.bindingHandlers.googleChartHumidity = {
 
             update: function (element, valueAccessor, allBindingsAccesor, viewModel, bindingContext) {
-                var dataSet = bindingContext.$root;
-                if (dataSet.weather().length == 0) return;
+
+                if (viewModel.weather().length == 0) return;
 
                 var chart = new google.charts.Line(element);
                 var data = new google.visualization.DataTable();
@@ -94,9 +96,9 @@
 
                 var dataArray = [];
 
-                for (var i = 0; i < dataSet.weather().length; i++) {
-                    var thisdate = new Date(dataSet.weather()[i].DateTimeFormatted);
-                    dataArray.push([thisdate, dataSet.weather()[i].HUMIDITY]);
+                for (var i = 0; i < viewModel.weather().length; i++) {
+                    var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
+                    dataArray.push([thisdate, viewModel.weather()[i].HUMIDITY]);
                 }
 
                 data.addRows(dataArray);
@@ -125,8 +127,7 @@
         ko.bindingHandlers.googleChartTemp = {
             update: function (element, valueAccessor, allBindingsAccesor, viewModel, bindingContext) {
 
-                var dataSet = bindingContext.$root;
-                if (dataSet.weather().length == 0) return;
+                if (viewModel.weather().length == 0) return;
 
                 var chart = new google.charts.Line(element);
                 var data = new google.visualization.DataTable();
@@ -137,9 +138,9 @@
 
                 var dataArray = [];
 
-                for (var i = 0; i < dataSet.weather().length; i++) {
-                    var thisdate = new Date(dataSet.weather()[i].DateTimeFormatted);
-                    dataArray.push([thisdate, dataSet.weather()[i].VAL1, dataSet.weather()[i].VAL2]);
+                for (var i = 0; i < viewModel.weather().length; i++) {
+                    var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
+                    dataArray.push([thisdate, viewModel.weather()[i].VAL1, viewModel.weather()[i].VAL2]);
                 }
 
                 data.addRows(dataArray);
