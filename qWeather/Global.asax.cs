@@ -18,11 +18,8 @@ namespace qWeather
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+            ESPDataStartSend.Start();
 
-            if (Convert.ToBoolean(WebConfigurationManager.AppSettings["ESPScheduler"]))
-            {
-                ESPDataStartSend.Start();
-            }
         }
     }
 }
