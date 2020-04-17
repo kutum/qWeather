@@ -2,8 +2,6 @@
 #include "DHT.h"                                        //Библиотека для работы с датчиком температуры DHT11 (датчик на корпусе)
 #include <OneWire.h>                                    //Библиотека шина связи для датчика DHT11
 #include <DallasTemperature.h>                          //Библиотека для работы с датчиком температуры и влажности DS18B20              
-#include <MySQL_Connection.h>                           //Библиотека для подключения к MySQL БД
-#include <MySQL_Cursor.h>                               //Библиотека для работы с запросами MySQL БД
 #include <ESP8266WiFi.h>                                //Библиотека для подключения к WiFi 
 #include <WiFiClient.h>                                 //Библиотека для работы в сети как клиент
 #include <aREST.h>                                      //Библиотека для обработки REST запросов
@@ -30,16 +28,9 @@ float T_OUT;                                            //Переменная со значение
 char ssid[] = "xiaomi_kutuck";                          //Имя WiFi сети к которой подключаемся
 char pass[] = "myofrene";                               //Пароль WiFi сети
 
-
-MySQL_Connection conn((Client *)&client);               //Инициализация клиента подключения к MySQL
-IPAddress mysql_ip(192, 168 ,1, 5);                     //IP адрес сервера MySQL 
-char mysql_user[] = "kutum";                            //Пользователь MySQL
-char mysql_password[] = "myofrene";                     //Пароль MySQL
-char query[128];                                        //Переменная для хранения запроса к БД
-
 unsigned long timing;                                   //Переменная "времени", для выполнения операций циклично в определённое время
 
-bool first = true;                                             //Переменная "первого" запуска
+
 bool blinker = false;                                   //Переменная для "мигания" двоеточием на часах
 
 
@@ -60,8 +51,6 @@ byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B0000
 
 void setup(){                                           //Инициализация при запуске контроллера
   
-  Serial.begin(115200);                                 //Инициализация последовательного порта
-  
   lcd.init();                                           //Включение дисплея
   lcd.backlight();                                      //Включение подсветки дисплея
   
@@ -74,8 +63,6 @@ void setup(){                                           //Инициализация при запу
   lcd.print("  METEOSTATION  ");
   delay(5000);                                          //Задержка
   
-
-
   lcd.setCursor(0, 0);                                
   lcd.print("CONNECTING WIFI ");                        
   lcd.setCursor(0, 1);
@@ -94,17 +81,6 @@ void setup(){                                           //Инициализация при запу
   delay(1000);
   lcd.clear();                                          //Очищаем дисплей
   
-  lcd.setCursor(0, 0);
-  lcd.print("CONNECTING TO DB");
-  lcd.setCursor(0, 1);
-  lcd.print(mysql_ip);                                  //Выводим IP адрес сервера базы данных 
-  lcd.print(" ");
-  while (conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true) {  //Предпринимаем попытки подключиться к базе данных
-    lcd.print(".");
-    delay(100);
-  }
-
-  delay(1000);
   lcd.setCursor(0, 1);
   lcd.print("CONNECTED TO DB ");
   lcd.clear();
@@ -138,17 +114,7 @@ void loop(){                                                  //Функция, которая
 
   writeLCD();                                                 //Функция вывода показаний на экран                     
   restapi();                                                  //Функция обработки REST API запросов
-  
-  if (first == true){                                         //Если это первый цикл (контроллер только включили в сеть) то сразу отправляем показания датчиков на сервер, чтобы не ждать 10 минут (полезно для отладки, но не практично поскольку при старте датчики немного врут
-    sendquery();
-  }
-  
-  if(millis() - timing >= 600000) { //10 min = 600000         //Запускаем отправку показаний датчиков в БД каждые 10 минут
-    sendquery();
-  }
-  
-  first = false;                                              //Запоминаем что первый запуск прошёл, далее будет каждые 10 минут
-                                              
+                                            
   delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
 }
 
@@ -211,31 +177,6 @@ void writeLCD()                                               //Функция вывода з
     lcd.setCursor(15, 1);
     lcd.write(byte(4));
   }
-}
-
-void sendquery(){                                            //Функция отправки данных в базу данных
-  
- if(WiFi.status() != WL_CONNECTED){                         //Проверяем наличие WIFI подключения, если такового не имеется то выходим из функции
-        return;
-      }
-      
-if(conn.connect(mysql_ip, 3306, mysql_user, mysql_password) != true){ //Проверяем наличие подключения к БД, если такового не имеется выходим из функции
-        return;
-      }
-
-    timing=millis();                                        //Запоминаем время
-    getTemperature();                                       //Получаем показания с датчиков
-    
-    char INSERT_SQL[] = "INSERT INTO ESP8266.WEATHER (DATETIME,VAL1,VAL2,HUMIDITY) VALUES (CURRENT_TIMESTAMP(),%f,%f,%f)"; /*Запрос для записи данных в таблицу WEATHER в базе данных MySQL. 
-                                                                                                                            Данная таблица имеет 5 столбцов: ID - ключевое, VAL1 - наружняя температура,
-                                                                                                                            VAL2 - внутренняя температура, HUMIDITY - влажность воздуха*/
-    sprintf(query, INSERT_SQL, T_OUT,T_IN,Humidity);        //Конвертирование данных в строку 
-    Serial.println(query);                                  //Вывод запроса в серийный порт (для отладки)
-    
-    MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);        //Инициализируем курсор для отправки запроса
-    cur_mem->execute(query);                                //Выполняем запрос к БД
-
-    delete cur_mem;                                         //Удаляем курсор
 }
 
 void restapi(){                                             //функция обработки REST API запросов
