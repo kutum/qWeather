@@ -19,7 +19,6 @@ aREST rest = aREST();                                   //Инициализируем сервис 
 WiFiUDP ntpUDP;                                         //Инициализируем обработчика UDP пакетов для получения и расшифровки даты и времени
 NTPClient timeClient(ntpUDP,"pool.ntp.org");            //Инициализируем "клиента времени" который берёт дату и время с сервера pool.ntp.org
 WiFiServer server(80);                                  //Инициализируем веб-сервер, на котором будет крутиться REST сервис
-WiFiClient client;                                      //Инициализируем клиента подключения
 
 float T_IN;                                             //Переменная со значением температуры с DHT11 (комнатная)
 float Humidity;                                         //Переменная со значением влажности
@@ -29,8 +28,6 @@ char ssid[] = "xiaomi_kutuck";                          //Имя WiFi сети к которо
 char pass[] = "myofrene";                               //Пароль WiFi сети
 
 unsigned long timing;                                   //Переменная "времени", для выполнения операций циклично в определённое время
-
-
 bool blinker = false;                                   //Переменная для "мигания" двоеточием на часах
 
 
@@ -115,7 +112,7 @@ void loop(){                                                  //Функция, которая
   writeLCD();                                                 //Функция вывода показаний на экран                     
   restapi();                                                  //Функция обработки REST API запросов
                                             
-  delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
+  //delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
 }
 
 void writeLCD()                                               //Функция вывода значений на экран
@@ -180,12 +177,26 @@ void writeLCD()                                               //Функция вывода з
 }
 
 void restapi(){                                             //функция обработки REST API запросов
+  
+    WiFiClient client = server.available();
+    
+    if (!client) {
+      //lcd.setCursor(5, 0);
+      //lcd.print("C");
+      return;
+    }
+    
+    if(!client.available()){
+      lcd.setCursor(5, 0);
+      lcd.print("S");
+      return;
+    }
 
-  WiFiClient client = server.available();                   //Инициализация клиентов
-  if (!client) {                                            //Если подключенных клиентов нет, то выходим из функции                                       
-    return;
-  }
-  rest.handle(client);                                      //Обработка запроса с клиента
+    lcd.setCursor(5, 0);
+    lcd.print(" ");
+    
+    rest.handle(client);
+
 }
 
 String getDate() {                                          //Функция получения даты в формате ДД.ММ.ГГГГ
