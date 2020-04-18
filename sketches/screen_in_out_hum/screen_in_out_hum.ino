@@ -3,7 +3,6 @@
 #include <OneWire.h>                                    //Библиотека шина связи для датчика DHT11
 #include <DallasTemperature.h>                          //Библиотека для работы с датчиком температуры и влажности DS18B20              
 #include <ESP8266WiFi.h>                                //Библиотека для подключения к WiFi 
-#include <WiFiClient.h>                                 //Библиотека для работы в сети как клиент
 #include <aREST.h>                                      //Библиотека для обработки REST запросов
 #include <NTPClient.h>                                  //Библиотека для получения даты и времени через интернет
 #include <WiFiUdp.h>                                    //Библиотека для работы с UDP-пакетами
@@ -31,6 +30,11 @@ unsigned long timing;                                   //Переменная "времени", 
 bool blinker = false;                                   //Переменная для "мигания" двоеточием на часах
 
 
+byte sun[8] = {B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111};       //Символ "улица" для внешней температуры
+byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000};     //Символ "домик" для комнатной температуры
+byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};  //Символ "капля" для влажности
+byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};   //Символ градуса цельсия 
+
 void getTemperature() {                                 //Функция получения температуры с датчиков
   do {
     DS18B20_DT.requestTemperatures();                   //Запрос к датчику DT11
@@ -40,11 +44,6 @@ void getTemperature() {                                 //Функция получения темп
   Humidity = dht.readHumidity();                        //Получаем влажность с датчика DS18B20
   T_OUT = dht.readTemperature();                        //Получаем температуру с датчика DS18B20 
 }
-
-byte sun[8] = {B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111};       //Символ "улица" для внешней температуры
-byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000};     //Символ "домик" для комнатной температуры
-byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};  //Символ "капля" для влажности
-byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};   //Символ градуса цельсия 
 
 void setup(){                                           //Инициализация при запуске контроллера
   
@@ -77,10 +76,6 @@ void setup(){                                           //Инициализация при запу
   lcd.print(" WIFI CONNECTED ");                        //Если подключились сигнализируем об этом 
   delay(1000);
   lcd.clear();                                          //Очищаем дисплей
-  
-  lcd.setCursor(0, 1);
-  lcd.print("CONNECTED TO DB ");
-  lcd.clear();
   
                                                               //Инициализация переменных для REST API  
   rest.variable("T_IN", &T_IN);                               //Внутренняя температура                                                                        
@@ -179,10 +174,8 @@ void writeLCD()                                               //Функция вывода з
 void restapi(){                                             //функция обработки REST API запросов
   
     WiFiClient client = server.available();
-    
+
     if (!client) {
-      //lcd.setCursor(5, 0);
-      //lcd.print("C");
       return;
     }
     
@@ -191,12 +184,13 @@ void restapi(){                                             //функция обработки 
       lcd.print("S");
       return;
     }
-
-    lcd.setCursor(5, 0);
-    lcd.print(" ");
+    else
+    {
+      lcd.setCursor(5, 0);
+      lcd.print(" ");
+    }
     
     rest.handle(client);
-
 }
 
 String getDate() {                                          //Функция получения даты в формате ДД.ММ.ГГГГ
