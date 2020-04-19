@@ -10,14 +10,14 @@ namespace qWeather.Models.ESP8266
     {
         public async Task Execute(IJobExecutionContext context)
         {
-            Logging logging = new Logging();
-
             if (Convert.ToBoolean(WebConfigurationManager.AppSettings["ESPScheduler"]))
             {
-                logging.WriteLog(new string[] { "start insert job" });
-
                 try
                 {
+                    Logging logging = new Logging();
+
+                    logging.WriteLog(new string[] { "start insert job" });
+
                     using (var weatherDbcontext = new WeatherDbContext())
                     {
                         ESPData ESPData = new ESPData();
@@ -41,17 +41,20 @@ namespace qWeather.Models.ESP8266
                         });
 
                         await weatherDbcontext.SaveChangesAsync();
-
                         logging.WriteLog(new string[] { "Successfull insert!" });
                     }
                 }
                 catch (Exception ex)
                 {
+                    Logging logging = new Logging();
+
                     logging.WriteLog(new string[]
                     {
                         "error while insertnig!",
-                        ex.Message + " ### " + ex.InnerException
+                        "ESPDataSender.cs " + ex.Message + " ### " + ex.InnerException
                     });
+
+                    await Execute(context);
                 }
             }
         }

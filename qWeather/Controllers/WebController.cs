@@ -34,10 +34,8 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<Weather> GetLast()
         {
-
             DateTime LastDate = await context.Weather.MaxAsync(y => y.DATETIME);
             return await context.Weather.Where(x => x.DATETIME == LastDate).OrderByDescending(x => x.DATETIME).FirstOrDefaultAsync();
-        
         }
         
         [Route("now")]
@@ -48,7 +46,7 @@ namespace qWeather.Controllers
             string URL = WebConfigurationManager.AppSettings["ESP8266url"];
             ESPData = await ESPData.GetAsync(new Uri(URL));
 
-            Weather weather = new Weather
+            return new Weather
             {
                 Id = ESPData.id,
                 DATETIME = DateTime.Now,
@@ -56,33 +54,15 @@ namespace qWeather.Controllers
                 VAL2 = ESPData.variables.T_IN,
                 HUMIDITY = (int)ESPData.variables.Humidity
             };
-
-            return weather;
         }
 
         [Route("average")]
         [HttpGet()]
         public async Task<WeatherAverageView> GetAverage([FromUri]DateTime start, [FromUri]DateTime end)
         {            
-            var weather = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x=>x.DATETIME).ToListAsync();
+            List<Weather> weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x=>x.DATETIME).ToListAsync();
 
-            float? insideSum = 0.0f;
-            float? outsideSum = 0.0f;
-            float? humiditySum = 0.0f;
-
-            foreach (var item in weather)
-            {
-                insideSum += item.VAL2;
-                outsideSum += item.VAL1;
-                humiditySum += item.HUMIDITY;
-            }
-
-            return new WeatherAverageView()
-            {
-                insideTemp = insideSum / weather.Count,
-                outsideTemp = outsideSum / weather.Count,
-                humidity = humiditySum / weather.Count
-            };
+            return new WeatherAverageView(weathers);
         }
     }
 }

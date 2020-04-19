@@ -1,12 +1,17 @@
 ﻿using Quartz;
 using Quartz.Impl;
-using System;
 using System.Web.Configuration;
 
 namespace qWeather.Models.ESP8266
 {
+    /// <summary>
+    /// Класс задания по расписанию
+    /// </summary>
     public class ESPDataStartSend
     {
+        /// <summary>
+        /// Запуск задания по расписанию
+        /// </summary>
         public static async void Start()
         {
             IScheduler scheduler = await StdSchedulerFactory.GetDefaultScheduler();

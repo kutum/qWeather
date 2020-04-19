@@ -19,7 +19,6 @@ namespace qWeather
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             ESPDataStartSend.Start();
-
         }
     }
 }

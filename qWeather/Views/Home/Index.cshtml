@@ -83,7 +83,7 @@
                 model.outside((data.VAL1).toFixed(1));
                 model.inside((data.VAL2).toFixed(1));
                 model.humidity(data.HUMIDITY);
-            }, "now");
+            }, "last");
         }
 
         function getAverage() {
@@ -207,14 +207,12 @@
             }
         }
 
-        
         $(document).ready(function () {
             getToday();
             getLast();
             getAverage();
             ko.applyBindings(model);
-            
-        });
-        
+        });   
+
     </script>
 }

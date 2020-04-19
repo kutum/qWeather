@@ -29,6 +29,9 @@ namespace qWeather.Models
         /// </summary>
         public int? HUMIDITY { get; set; }
 
+        /// <summary>
+        /// Форматированный вид даты и времени
+        /// </summary>
         [NotMapped]
         public string DateTimeFormatted
         {
