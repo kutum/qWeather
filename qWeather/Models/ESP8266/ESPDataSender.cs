@@ -50,7 +50,7 @@ namespace qWeather.Models.ESP8266
 
                     logging.WriteLog(new string[]
                     {
-                        "error while insertnig!",
+                        "error while inserting!",
                         "ESPDataSender.cs " + ex.Message + " ### " + ex.InnerException
                     });
 
