@@ -1,6 +1,7 @@
 ﻿using Quartz;
 using qWeather.Context;
 using System;
+using System.Data.Entity.Infrastructure;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 
@@ -14,34 +15,48 @@ namespace qWeather.Models.ESP8266
             {
                 try
                 {
-                    Logging logging = new Logging();
-
-                    logging.WriteLog(new string[] { "start insert job" });
-
                     using (var weatherDbcontext = new WeatherDbContext())
                     {
-                        ESPData ESPData = new ESPData();
+                        Logging logging = new Logging();
+
+                        logging.WriteLog(new string[] { "start insert job" });
+
+                        ESPData espdata = new ESPData();
                         string URL = WebConfigurationManager.AppSettings["ESP8266url"];
-                        ESPData = await ESPData.GetAsync(new Uri(URL));
+                        espdata = await espdata.GetAsync(new Uri(URL));
 
                         weatherDbcontext.Weather.Add(new Weather
                         {
                             DATETIME = DateTime.Now,
-                            VAL1 = ESPData.variables.T_OUT,
-                            VAL2 = ESPData.variables.T_IN,
-                            HUMIDITY = (int)ESPData.variables.Humidity
+                            VAL1 = espdata.variables.T_OUT,
+                            VAL2 = espdata.variables.T_IN,
+                            HUMIDITY = espdata.variables.Humidity
                         });
 
-                        logging.WriteLog(new string[]
+                        try
                         {
-                            "insert",
-                            "T_OUT = " + ESPData.variables.T_OUT,
-                            "T_IN = " + ESPData.variables.T_IN,
-                            "HUMIDITY = " + ESPData.variables.Humidity
-                        });
+                            await weatherDbcontext.SaveChangesAsync();
 
-                        await weatherDbcontext.SaveChangesAsync();
-                        logging.WriteLog(new string[] { "Successfull insert!" });
+                            logging.WriteLog(new string[]
+                            {
+                                "Successfull insert!",
+                                "insert at " + DateTime.Now.ToString(),
+                                "T_OUT = " + espdata.variables.T_OUT,
+                                "T_IN = " + espdata.variables.T_IN,
+                                "HUMIDITY = " + espdata.variables.Humidity
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            logging.WriteLog(new string[]
+                            {
+                                "error while SaveChangesAsync()",
+                                "ESPDataSender.cs " + ex.Message + " ### " + ex.InnerException
+                            });
+                            await Execute(context);
+                        }
+
+                        
                     }
                 }
                 catch (Exception ex)

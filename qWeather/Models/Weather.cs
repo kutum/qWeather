@@ -27,7 +27,7 @@ namespace qWeather.Models
         /// <summary>
         /// Влажность
         /// </summary>
-        public int? HUMIDITY { get; set; }
+        public float? HUMIDITY { get; set; }
 
         /// <summary>
         /// Форматированный вид даты и времени

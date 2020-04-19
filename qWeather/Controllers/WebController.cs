@@ -52,7 +52,7 @@ namespace qWeather.Controllers
                 DATETIME = DateTime.Now,
                 VAL1 = ESPData.variables.T_OUT,
                 VAL2 = ESPData.variables.T_IN,
-                HUMIDITY = (int)ESPData.variables.Humidity
+                HUMIDITY = ESPData.variables.Humidity
             };
         }
 

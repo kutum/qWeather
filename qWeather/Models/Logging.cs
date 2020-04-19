@@ -52,7 +52,10 @@ namespace qWeather.Models
                     Directory.CreateDirectory(FolderPath);
 
                 if (!File.Exists(Filepath))
+                {
                     File.Create(Filepath);
+                    File.WriteAllText(Filepath, "Created " + DateTimeLog);
+                }
 
                 File.AppendAllText(Filepath, DateTimeLog + ": " + Message);
             }
@@ -74,7 +77,10 @@ namespace qWeather.Models
                     Directory.CreateDirectory(FolderPath);
 
                 if (!File.Exists(Filepath))
+                {
                     File.Create(Filepath);
+                    File.WriteAllText(Filepath, "Created log file " + DateTimeLog);
+                }
 
                 Message[0] = DateTimeLog + ": " + Message[0];
                 File.AppendAllLines(Filepath, Message);
