@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Web.Configuration;
+
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -14,10 +15,28 @@
     @Scripts.Render("~/bundles/bootstrap")
     @Scripts.Render("~/bundles/knockout")
     @Scripts.Render("~/bundles/chartjs")
+    @Scripts.Render("~/bundles/viewmodel")
+
     @RenderSection("scripts", required: false)
 
     <div class="container ">
         @RenderBody()
     </div>
+
+    <script>
+        function sendAjaxRequest(httpMethod, callback, url, reqData) {
+
+        var pathtoapi = "@WebConfigurationManager.AppSettings["pathtoapi"]";
+
+        $.ajax(pathtoapi + (url ? "/" + url : ""), {
+            type: httpMethod,
+            success: callback,
+            data: JSON.stringify(reqData),
+            accepts: "application/json",
+            contentType: "application/json"
+
+        });
+    }
+    </script>
 </body>
 </html>

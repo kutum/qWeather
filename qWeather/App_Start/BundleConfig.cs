@@ -19,6 +19,9 @@ namespace qWeather
             bundles.Add(new ScriptBundle("~/bundles/chartjs").Include(
                         "~/Scripts/Chart.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/viewmodel").Include(
+                        "~/Scripts/viewmodel/*.viewmodel.js"));
+
             // Используйте версию Modernizr для разработчиков, чтобы учиться работать. Когда вы будете готовы перейти к работе,
             // готово к выпуску, используйте средство сборки по адресу https://modernizr.com, чтобы выбрать только необходимые тесты.
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(

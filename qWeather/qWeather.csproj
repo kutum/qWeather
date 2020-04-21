@@ -250,6 +250,8 @@
     <Content Include="Scripts\popper-utils.min.js" />
     <Content Include="Scripts\popper.js" />
     <Content Include="Scripts\popper.min.js" />
+    <Content Include="Scripts\viewmodel\functions.viewmodel.js" />
+    <Content Include="Scripts\viewmodel\main.viewmodel.js" />
     <Content Include="Scripts\src\index.js" />
     <Content Include="Scripts\src\methods\defaults.js" />
     <Content Include="Scripts\src\methods\destroy.js" />
@@ -340,6 +342,7 @@
     <Content Include="Scripts\popper.js.map" />
     <Content Include="Scripts\popper-utils.min.js.map" />
     <Content Include="Scripts\popper-utils.js.map" />
+    <Content Include="Scripts\viewmodel\charts.viewmodel.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
