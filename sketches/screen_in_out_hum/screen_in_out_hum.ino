@@ -3,6 +3,8 @@
 #include <OneWire.h>                                    //Библиотека шина связи для датчика DHT11
 #include <DallasTemperature.h>                          //Библиотека для работы с датчиком температуры и влажности DS18B20              
 #include <ESP8266WiFi.h>                                //Библиотека для подключения к WiFi 
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
 #include <aREST.h>                                      //Библиотека для обработки REST запросов
 #include <NTPClient.h>                                  //Библиотека для получения даты и времени через интернет
 #include <WiFiUdp.h>                                    //Библиотека для работы с UDP-пакетами
@@ -35,6 +37,13 @@ byte house[8] = {B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000}
 byte humidity[8] = {B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000};  //Символ "капля" для влажности
 byte celsium[8] = {B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000};   //Символ градуса цельсия 
 
+
+unsigned long lastTime = 0;
+//unsigned long timerDelay = 10000; //10 seconds
+unsigned long timerDelay = 1800000; //30 minutes
+const char* serverName = "http://192.168.1.5/qWeather/api/update";
+
+
 void getTemperature() {                                 //Функция получения температуры с датчиков
   do {
     DS18B20_DT.requestTemperatures();                   //Запрос к датчику DT11
@@ -46,6 +55,8 @@ void getTemperature() {                                 //Функция получения темп
 }
 
 void setup(){                                           //Инициализация при запуске контроллера
+
+  Serial.begin(115200);
   
   lcd.init();                                           //Включение дисплея
   lcd.backlight();                                      //Включение подсветки дисплея
@@ -87,7 +98,7 @@ void setup(){                                           //Инициализация при запу
   server.begin();                                             //Запускаем веб-сервер             
                       
   lcd.setCursor(0, 0);                                
-  lcd.print("REST STARTED");
+  lcd.print("DEVICE IP");
   lcd.setCursor(0, 1);
   lcd.print(WiFi.localIP());                                  //Выводим присвоенный IP адрес веб-сервера, по которому можно будет обратиться к контроллеру
   delay(3000);
@@ -106,7 +117,11 @@ void loop(){                                                  //Функция, которая
 
   writeLCD();                                                 //Функция вывода показаний на экран                     
   restapi();                                                  //Функция обработки REST API запросов
-                                            
+
+  if ((millis() - lastTime) > timerDelay) {
+        sendPostRequest();  
+        lastTime = millis();
+  }                                        
   //delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
 }
 
@@ -208,4 +223,29 @@ String getDate() {                                          //Функция получения 
    String dayStr = day < 10 ? "0" + String(day) : String(day);
 
    return dayStr + "." + monthStr + "." + yearStr/*.substring(2,4)*/;
+}
+
+void sendPostRequest()
+{
+        HTTPClient http;
+
+        http.begin(serverName);
+        http.addHeader("Content-Type", "application/json");
+
+        String request = "{\"T_IN\":\""+String(T_IN)+"\",\"T_OUT\":\""+String(T_OUT)+"\",\"Humidity\":\""+String(Humidity)+"\"}";
+        int httpResponseCode = http.POST(request);
+  
+        Serial.println(serverName);
+        Serial.println("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+        Serial.println(request);
+        
+        http.end();
+
+        if(httpResponseCode != 204)
+        {
+            delay(1000);
+            sendPostRequest();  
+            
+        }
 }

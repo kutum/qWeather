@@ -1,4 +1,6 @@
-﻿using qWeather.Context;
+﻿using Microsoft.Ajax.Utilities;
+using Newtonsoft.Json;
+using qWeather.Context;
 using qWeather.Models;
 using qWeather.Models.ESP8266;
 using System;
@@ -63,6 +65,33 @@ namespace qWeather.Controllers
             List<Weather> weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x=>x.DATETIME).ToListAsync();
 
             return new WeatherAverageView(weathers);
+        }
+
+        [Route("update")]
+        [HttpPost]
+        public async Task UpdateSensors(ESPSensors sensors)
+        {
+            try
+            {
+                context.Weather.Add(new Weather
+                {
+                    DATETIME = DateTime.Now,
+                    VAL1 = sensors.T_OUT,
+                    VAL2 = sensors.T_IN,
+                    HUMIDITY = sensors.Humidity
+                });
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Logging logging = new Logging();
+                logging.WriteLog(new string[]
+                {
+                    "error while inserting!",
+                     ex.Message + " ### " + ex.InnerException
+                });
+            }
         }
     }
 }
