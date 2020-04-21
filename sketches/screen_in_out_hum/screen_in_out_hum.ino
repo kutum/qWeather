@@ -43,6 +43,7 @@ unsigned long lastTime = 0;
 unsigned long timerDelay = 1800000; //30 minutes
 const char* serverName = "http://192.168.1.5/qWeather/api/update";
 
+bool first = true;
 
 void getTemperature() {                                 //Функция получения температуры с датчиков
   do {
@@ -118,11 +119,17 @@ void loop(){                                                  //Функция, которая
   writeLCD();                                                 //Функция вывода показаний на экран                     
   restapi();                                                  //Функция обработки REST API запросов
 
+  if (first)
+  {
+    sendPostRequest();  
+  }
   if ((millis() - lastTime) > timerDelay) {
         sendPostRequest();  
         lastTime = millis();
   }                                        
   //delay(500);                                                 //Общий такт контроллера - 0,5 секунды.
+
+  first = false;
 }
 
 void writeLCD()                                               //Функция вывода значений на экран
