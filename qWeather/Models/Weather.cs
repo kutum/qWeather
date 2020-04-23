@@ -36,7 +36,17 @@ namespace qWeather.Models
         public string DateTimeFormatted
         {
             get => DATETIME.ToString("yyyy-MM-dd HH:mm:s");
-            set => DateTimeFormatted = DATETIME.ToString("yyyy-MM-dd HH:mm:s");
+            set => DateTimeFormatted = this.DateTimeFormatted;
+        }
+
+        /// <summary>
+        /// Форматированный вид даты и времени "по русски"
+        /// </summary>
+        [NotMapped]
+        public string DateTimeFormattedRus
+        {
+            get => DATETIME.ToString("dd.MM.yyyy HH:mm");
+            set => DateTimeFormattedRus = this.DateTimeFormattedRus;
         }
     }
 }
