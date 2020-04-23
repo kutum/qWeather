@@ -41,6 +41,8 @@ const char* serverName = "http://192.168.1.5/qWeather/api/update";
 
 bool first = true;
 
+int periodMinutes = 10;
+
 void getTemperature() {                                 //Функция получения температуры с датчиков
     do {
         DS18B20_DT.requestTemperatures();                   //Запрос к датчику DT11
@@ -122,11 +124,14 @@ void loop() {                                                  //Функция, котора
 
         int minutes = timeClient.getMinutes();
 
-        if ((minutes == 30 || minutes == 0) && minutes != lastInsert) {
-            sendPostRequest();
-            lastInsert = minutes;
+        for (int m = 0; m <= 60; m = m + periodMinutes)
+        {
+            if (minutes == m && minutes != lastInsert)
+            {
+                sendPostRequest();
+                lastInsert = minutes;
+            }
         }
-
     }
     else {
 
@@ -209,14 +214,7 @@ void restapi() {                                             //функция обработки
     }
 
     if (!client.available()) {
-        lcd.setCursor(5, 0);
-        lcd.print("S");
         return;
-    }
-    else
-    {
-        lcd.setCursor(5, 0);
-        lcd.print(" ");
     }
 
     rest.handle(client);
@@ -258,6 +256,10 @@ void sendPostRequest()
 
     if (httpResponseCode != 204)
     {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("POST SEND ERROR");
+
         delay(1000);
         sendPostRequest();
 
