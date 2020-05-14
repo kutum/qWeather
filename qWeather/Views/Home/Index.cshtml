@@ -4,83 +4,118 @@
     ViewBag.Title = "Home Page";
 }
 <br />
-    <div class="row">
-        <div class="col">
-            <div class="card row">
-                <div class="card-body">
-                    <h3 class="card-title">CURRENT</h3>
-                    <div>
-                        <div class="d-inline" data-bind="text: datetimeNow"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideNow"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideNow"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityNow"></div>
-                    </div>
-                </div>
+<div class="row">
+    <div class="col">
+        <div class="card row">
+            <div class="card-body">
+                <h5 class="card-title d-inline">TYPE</h5>
+                <select id="dateRange" class="d-inline float-right" data-bind="options: dropdownOptions, value: dropdownValue"></select>
+
             </div>
-            <br />
-            <div class="card row">
-                <div class="card-body">
-                    <h3 class="card-title">LAST IN DB</h3>
-                    <div>
-                        <div class="d-inline" data-bind="text: datetimeLast"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideLast"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideLast"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityLast"></div>
-                    </div>
+        </div>
+        <br />
+        <div class="card row">
+            <div class="card-body">
+                <h5 class="card-title">CURRENT</h5>
+                <div>
+                    <div class="d-inline" data-bind="text: datetimeNow"></div>
                 </div>
-            </div>
-            <br />
-            <div class="card row">
-                <div class="card-body">
-                    <h3 class="card-title">AVERAGE</h3>
-                    <div>
-                        <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideAverage"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideAverage"></div>
-                    </div>
-                    <div>
-                        <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityAverage"></div>
-                    </div>
+                <div>
+                    <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideNow"></div>
+                </div>
+                <div>
+                    <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideNow"></div>
+                </div>
+                <div>
+                    <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityNow"></div>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">GRAPH</h3>
-                    <canvas width="800" height="255" data-bind="ChartTemp"></canvas>
-                    <br />
-                    <canvas width="800" height="255" data-bind="ChartHumidity"></canvas>
+        <br />
+        <div class="card row">
+            <div class="card-body">
+                <h5 class="card-title">LAST IN DB</h5>
+                <div>
+                    <div class="d-inline" data-bind="text: datetimeLast"></div>
+                </div>
+                <div>
+                    <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideLast"></div>
+                </div>
+                <div>
+                    <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideLast"></div>
+                </div>
+                <div>
+                    <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityLast"></div>
+                </div>
+            </div>
+        </div>
+        <br />
+        <div class="card row">
+            <div class="card-body">
+                <h5 class="card-title">AVERAGE</h5>
+                <div>
+                    <div class="d-inline">INSIDE: </div> <div class="d-inline" data-bind="text: insideAverage"></div>
+                </div>
+                <div>
+                    <div class="d-inline">OUTSIDE: </div><div class="d-inline" data-bind="text: outsideAverage"></div>
+                </div>
+                <div>
+                    <div class="d-inline">HUMIDITY: </div><div class="d-inline" data-bind="text: humidityAverage"></div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">GRAPH</h5>
+                <canvas width="800" height="255" data-bind="ChartTemp"></canvas>
+                <br />
+                <canvas width="800" height="255" data-bind="ChartHumidity"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
 
         $(document).ready(function () {
-            //getToday();
-            getLastHours(8);
-            getLast();
+            var hours = 4
+            initData(hours);
             getNow();
-            //getAverage(getTodayString(new Date()));
-            getAverage(getDateHoursDiffString(8));
             ko.applyBindings(model);
-        });   
+        });
 
     </script>
 }
+
+<script>
+    $("#dateRange").change(function () {
+
+        var value = $(this).val();
+
+        if (value == 'Last 4h') {
+            initData(4);
+        }
+        if (value == 'Last 8h') {
+            initData(8);
+        }
+        if (value == 'Day') {
+            getDay(new Date());
+            getAverageByDay(new Date());
+        }
+        if (value == 'Week') {
+            getWeek(new Date());
+            getAverageByWeek(new Date());
+        }
+        if (value == 'Month') {
+            getMonth(new Date());
+            getAverageByMonth(new Date());
+        }
+        if (value == 'Year') {
+            getYear(new Date());
+            getAverageByWeek(new Date());
+        }
+    });
+</script>

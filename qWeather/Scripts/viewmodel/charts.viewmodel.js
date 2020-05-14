@@ -8,6 +8,9 @@
     grey: 'rgb(201, 203, 207)'
 };
 
+weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 ko.bindingHandlers.ChartTemp = {
     update: function (element, valueAccessor, allBindingsAccesor, viewModel, bindingContext) {
 
@@ -24,7 +27,20 @@ ko.bindingHandlers.ChartTemp = {
             var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
             dataArrayOut.push(viewModel.weather()[i].VAL1);
             dataArrayIn.push(viewModel.weather()[i].VAL2);
-            dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
+
+            var type = model.dropdownValue();
+            if (type == 'Last 4h' || type == 'Last 8h' || type == 'Day') {
+                dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
+            }
+            if (type == 'Week') {
+                dataLabels.push(weekdays[thisdate.getDay()]);
+            }
+            if (type == 'Month') {
+                dataLabels.push(thisdate.toLocaleDateString().substring(0, 5));
+            }
+            if (type == 'Year') {
+                dataLabels.push(months[thisdate.getMonth()]);
+            }   
         }
 
         var ctx = element.getContext('2d');
@@ -71,7 +87,19 @@ ko.bindingHandlers.ChartHumidity = {
         for (var i = 0; i < viewModel.weather().length; i++) {
             var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
             dataArrayHumidity.push(viewModel.weather()[i].HUMIDITY);
-            dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
+            var type = model.dropdownValue();
+            if (type == 'Last 4h' || type == 'Last 8h' || type == 'Day') {
+                dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
+            }
+            if (type == 'Week') {
+                dataLabels.push(weekdays[thisdate.getDay()]);
+            }
+            if (type == 'Month') {
+                dataLabels.push(thisdate.toLocaleDateString().substring(0, 5));
+            }
+            if (type == 'Year') {
+                dataLabels.push(months[thisdate.getMonth()]);
+            }  
         }
 
         var ctx = element.getContext('2d');

@@ -47,6 +47,42 @@ function getToday() {
     }, getTodayString(new Date()));
 }
 
+function getDay(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.weather.removeAll();
+        for (var i = 0; i < data.length; i++) {
+            model.weather.push(data[i]);
+        }
+    }, "day?date=" + getDateTimeSting(day));
+}
+
+function getWeek(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.weather.removeAll();
+        for (var i = 0; i < data.length; i++) {
+            model.weather.push(data[i]);
+        }
+    }, "week?date=" + getDateTimeSting(day));
+}
+
+function getMonth(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.weather.removeAll();
+        for (var i = 0; i < data.length; i++) {
+            model.weather.push(data[i]);
+        }
+    }, "month?date=" + getDateTimeSting(day));
+}
+
+function getYear(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.weather.removeAll();
+        for (var i = 0; i < data.length; i++) {
+            model.weather.push(data[i]);
+        }
+    }, "year?date=" + getDateTimeSting(day));
+}
+
 function getLast() {
     sendAjaxRequest("GET", function (data) {
         model.datetimeLast((data.DateTimeFormattedRus));
@@ -64,6 +100,38 @@ function getAverage(datesting) {
     }, "average" + datesting);
 }
 
+function getAverageByDay(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.outsideAverage((data.insideTemp).toFixed(1));
+        model.insideAverage((data.outsideTemp).toFixed(1));
+        model.humidityAverage((data.humidity).toFixed(1));
+    }, "averagebyday?date=" + getDateTimeSting(day));
+}
+
+function getAverageByWeek(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.outsideAverage((data.insideTemp).toFixed(1));
+        model.insideAverage((data.outsideTemp).toFixed(1));
+        model.humidityAverage((data.humidity).toFixed(1));
+    }, "averagebyweek?date=" + getDateTimeSting(day));
+}
+
+function getAverageByMonth(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.outsideAverage((data.insideTemp).toFixed(1));
+        model.insideAverage((data.outsideTemp).toFixed(1));
+        model.humidityAverage((data.humidity).toFixed(1));
+    }, "averagebymonth?date=" + getDateTimeSting(day));
+}
+
+function getAverageByYear(day) {
+    sendAjaxRequest("GET", function (data) {
+        model.outsideAverage((data.insideTemp).toFixed(1));
+        model.insideAverage((data.outsideTemp).toFixed(1));
+        model.humidityAverage((data.humidity).toFixed(1));
+    }, "averagebyyear?date=" + getDateTimeSting(day));
+}
+
 function getNow() {
     sendAjaxRequest("GET", function (data) {
         model.datetimeNow((data.DateTimeFormattedRus));
@@ -71,4 +139,10 @@ function getNow() {
         model.insideNow((data.VAL2).toFixed(1));
         model.humidityNow(data.HUMIDITY);
     }, "now");
+}
+
+function initData(hours) {
+    getLastHours(hours);
+    getLast();
+    getAverage(getDateHoursDiffString(hours));
 }

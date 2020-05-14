@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web.Configuration;
+using System.Web.DynamicData;
 using System.Web.Http;
 
 namespace qWeather.Controllers
@@ -62,7 +64,48 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<WeatherAverageView> GetAverage([FromUri]DateTime start, [FromUri]DateTime end)
         {            
-            List<Weather> weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).OrderBy(x=>x.DATETIME).ToListAsync();
+            var weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).ToListAsync();
+
+            return new WeatherAverageView(weathers);
+        }
+
+        [Route("averagebyday")]
+        [HttpGet()]
+        public async Task<WeatherAverageView> GetAverageByDay([FromUri] DateTime date)
+        {
+            var start = date.AddHours(-24);
+            var weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= date).ToListAsync();
+
+            return new WeatherAverageView(weathers);
+        }
+
+        [Route("averagebyweek")]
+        [HttpGet]
+        public async Task<WeatherAverageView> GetAverageByWeek([FromUri] DateTime date)
+        {
+            var start = date.StartOfWeek();
+            var end = date.EndOfWeek();
+            var weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= end).ToListAsync();
+
+            return new WeatherAverageView(weathers);
+        }
+
+        [Route("averagebymonth")]
+        [HttpGet()]
+        public async Task<WeatherAverageView> GetAverageByMonth([FromUri] DateTime date)
+        {
+            var start = new DateTime(date.Year, date.Month, 1);
+            var weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= date).ToListAsync();
+
+            return new WeatherAverageView(weathers);
+        }
+
+        [Route("averagebyyear")]
+        [HttpGet()]
+        public async Task<WeatherAverageView> GetAverageByYear([FromUri] DateTime date)
+        {
+            var start = new DateTime(date.Year, 1, 1);
+            var weathers = await context.Weather.Where(x => x.DATETIME >= start && x.DATETIME <= date).ToListAsync();
 
             return new WeatherAverageView(weathers);
         }
@@ -92,6 +135,126 @@ namespace qWeather.Controllers
                      ex.Message + " ### " + ex.InnerException
                 });
             }
+        }
+
+        [Route("day")]
+        [HttpGet()]
+        public async Task<IEnumerable<Weather>> GetByDay([FromUri] DateTime date)
+        {
+            var start = date.AddHours(-24);
+
+            var weatherGroups = await context.Weather.Where(x => x.DATETIME>= start &&
+                                                                 x.DATETIME <= date)
+                                                                    .GroupBy(x => x.DATETIME.Hour).ToListAsync();
+
+            List<Weather> weathers = new List<Weather>();
+            
+            foreach(var item in weatherGroups)
+            {
+                var weatherByHour = weatherGroups.Where(x => x.Key == item.Key);
+                foreach (var itemByHour in weatherByHour)
+                {
+                    weathers.Add(new Weather
+                    {
+                        DATETIME = new DateTime(date.Year, date.Month, date.Day, item.Key, 0, 0),
+                        VAL1 = itemByHour.Sum(x => x.VAL1) / itemByHour.Count(),
+                        VAL2 = itemByHour.Sum(x => x.VAL2) / itemByHour.Count(),
+                        HUMIDITY = itemByHour.Sum(x => x.HUMIDITY) / itemByHour.Count()
+                    });
+                }
+            }
+
+            return weathers;
+        }
+
+        [Route("week")]
+        [HttpGet()]
+        public async Task<IEnumerable<Weather>> GetByWeek([FromUri] DateTime date)
+        {
+            var start = date.StartOfWeek();
+            var end = date.EndOfWeek();
+
+            var weatherGroups = await context.Weather.Where(x => x.DATETIME >= start && 
+                                                                 x.DATETIME <= end)
+                                                                .GroupBy(x=>x.DATETIME.Day).ToListAsync();
+
+            List<Weather> weathers = new List<Weather>();
+
+            foreach (var item in weatherGroups)
+            {
+                var weatherByDay = weatherGroups.Where(x => x.Key == item.Key);
+                foreach(var itemByDay in weatherByDay)
+                {
+                    weathers.Add(new Weather
+                    {
+                        DATETIME = new DateTime(date.Year, date.Month, item.Key),
+                        VAL1 = itemByDay.Sum(x=>x.VAL1) / itemByDay.Count(),
+                        VAL2 = itemByDay.Sum(x=>x.VAL2) / itemByDay.Count(),
+                        HUMIDITY = itemByDay.Sum(x=>x.HUMIDITY) / itemByDay.Count()
+                    });
+                }
+            }
+
+            return weathers;
+        }
+
+        [Route("month")]
+        [HttpGet()]
+        public async Task<IEnumerable<Weather>> GetByMonth([FromUri] DateTime date)
+        {
+            var start = new DateTime(date.Year, date.Month, 1);
+            
+            var weatherGroups = await context.Weather.Where(x => x.DATETIME >= start && 
+                                                                 x.DATETIME <= date)
+                                                                    .GroupBy(x => x.DATETIME.Day).ToListAsync();
+
+            List<Weather> weathers = new List<Weather>();
+
+            foreach(var item in weatherGroups)
+            {
+                var weatherByDay = weatherGroups.Where(x => x.Key == item.Key);
+                foreach (var itemByDay in weatherByDay)
+                {
+                    weathers.Add(new Weather
+                    {
+                        DATETIME = new DateTime(date.Year, date.Month, item.Key),
+                        VAL1 = itemByDay.Sum(x => x.VAL1) / itemByDay.Count(),
+                        VAL2 = itemByDay.Sum(x => x.VAL2) / itemByDay.Count(),
+                        HUMIDITY = itemByDay.Sum(x => x.HUMIDITY) / itemByDay.Count()
+                    });
+                }
+            }
+
+            return weathers;
+        }
+
+        [Route("year")]
+        [HttpGet()]
+        public async Task<IEnumerable<Weather>> GetByYear([FromUri] DateTime date)
+        {
+            var start = new DateTime(date.Year, 1, 1);
+
+            var weatherGroups = await context.Weather.Where(x => x.DATETIME >= start &&
+                                                               x.DATETIME <= date)
+                                                                    .GroupBy(x => x.DATETIME.Month).ToListAsync();
+            List<Weather> weathers = new List<Weather>();
+
+            foreach(var item in weatherGroups)
+            {
+                var weatherByMonth = weatherGroups.Where(x => x.Key == item.Key);
+                foreach(var itemByMonth in weatherByMonth)
+                {
+                    weathers.Add(new Weather
+                    {
+                        DATETIME = new DateTime(date.Year, item.Key, 1),
+                        VAL1 = itemByMonth.Sum(x => x.VAL1) / itemByMonth.Count(),
+                        VAL2 = itemByMonth.Sum(x => x.VAL2) / itemByMonth.Count(),
+                        HUMIDITY = itemByMonth.Sum(x => x.HUMIDITY) / itemByMonth.Count()
+                    });
+                }
+            }
+
+            return weathers;
         }
     }
 }
