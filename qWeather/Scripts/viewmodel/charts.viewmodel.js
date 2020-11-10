@@ -24,9 +24,13 @@ ko.bindingHandlers.ChartTemp = {
         var dataLabels = [];
 
         for (var i = 0; i < viewModel.weather().length; i++) {
+
             var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
-            dataArrayOut.push(viewModel.weather()[i].VAL1);
-            dataArrayIn.push(viewModel.weather()[i].VAL2);
+            var val1 = viewModel.weather()[i].VAL1;
+            var val2 = viewModel.weather()[i].VAL2;
+
+            dataArrayOut.push(val1.toFixed(1));
+            dataArrayIn.push(val2.toFixed(1));
 
             var type = model.dropdownValue();
             if (type == 'Last 4h' || type == 'Last 8h' || type == 'Day') {
@@ -86,7 +90,10 @@ ko.bindingHandlers.ChartHumidity = {
 
         for (var i = 0; i < viewModel.weather().length; i++) {
             var thisdate = new Date(viewModel.weather()[i].DateTimeFormatted);
-            dataArrayHumidity.push(viewModel.weather()[i].HUMIDITY);
+            var humidity = viewModel.weather()[i].HUMIDITY;
+
+            dataArrayHumidity.push(humidity.toFixed(1));
+
             var type = model.dropdownValue();
             if (type == 'Last 4h' || type == 'Last 8h' || type == 'Day') {
                 dataLabels.push(thisdate.toLocaleTimeString().substring(0, 5));
