@@ -182,19 +182,15 @@ void writeLCD()                                               //Функция вывода з
     lcd.write(byte(1));                                         //Печатаем символ "улица"
     lcd.print((int)T_OUT);                                      //Показатель температуры на улице
 
-    Serial.println(T_OUT);
-
     if ((int)T_OUT >= 0) {
         if ((int)T_OUT < 10) {                                               //Этим условием заставляем символ градуса цельсия "прилипнуть" к значению. Если цифра в числе одна, то печатаем в 8 ячейке и стираем в 9
             lcd.setCursor(8, 1);
             lcd.write(byte(4));
             lcd.print(" ");
-            Serial.println("1");
         }
         else {
             lcd.setCursor(9, 1);                                     //Если две цифры в числе, то в 9
             lcd.write(byte(4));
-            Serial.println("2");
         }
     }
     else {
@@ -202,12 +198,10 @@ void writeLCD()                                               //Функция вывода з
             lcd.setCursor(9, 1);
             lcd.write(byte(4));
             lcd.print(" ");
-            Serial.println("3");
         }
         else {
             lcd.setCursor(10, 1);                                     //Если две цифры в числе, то в 10
             lcd.write(byte(4));
-            Serial.println("4");
         }
     }
 

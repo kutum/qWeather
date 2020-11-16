@@ -141,7 +141,7 @@ namespace qWeather.Controllers
         [HttpGet()]
         public async Task<IEnumerable<Weather>> GetByDay([FromUri] DateTime date)
         {
-            var start = date.AddHours(-24);
+            var start = date.AddDays(-1);
 
             var weatherGroups = await context.Weather.Where(x => x.DATETIME>= start &&
                                                                  x.DATETIME <= date)
@@ -156,7 +156,7 @@ namespace qWeather.Controllers
                 {
                     weathers.Add(new Weather
                     {
-                        DATETIME = new DateTime(date.Year, date.Month, date.Day, item.Key, 0, 0),
+                        DATETIME = new DateTime(date.Year, date.Month, itemByHour.FirstOrDefault().DATETIME.Day, item.Key, 0, 0),
                         VAL1 = itemByHour.Sum(x => x.VAL1) / itemByHour.Count(),
                         VAL2 = itemByHour.Sum(x => x.VAL2) / itemByHour.Count(),
                         HUMIDITY = itemByHour.Sum(x => x.HUMIDITY) / itemByHour.Count()
@@ -164,7 +164,7 @@ namespace qWeather.Controllers
                 }
             }
 
-            return weathers;
+            return weathers.OrderBy(x=>x.DATETIME);
         }
 
         [Route("week")]
