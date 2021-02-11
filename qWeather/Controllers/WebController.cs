@@ -1,16 +1,12 @@
-﻿using Microsoft.Ajax.Utilities;
-using Newtonsoft.Json;
-using qWeather.Context;
+﻿using qWeather.Context;
 using qWeather.Models;
 using qWeather.Models.ESP8266;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web.Configuration;
-using System.Web.DynamicData;
 using System.Web.Http;
 
 namespace qWeather.Controllers

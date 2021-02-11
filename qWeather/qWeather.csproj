@@ -156,6 +156,9 @@
       <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Telegram.Bot, Version=15.7.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Telegram.Bot.15.7.1\lib\net45\Telegram.Bot.dll</HintPath>
+    </Reference>
     <Reference Include="Ubiety.Dns.Core, Version=4.1.2.0, Culture=neutral, PublicKeyToken=62d65a2efdde5827, processorArchitecture=MSIL">
       <HintPath>..\packages\Ubiety.Dns.Core.4.1.2\lib\net471\Ubiety.Dns.Core.dll</HintPath>
     </Reference>
@@ -188,6 +191,7 @@
     <Compile Include="Models\ESP8266\ESPDataStartSend.cs" />
     <Compile Include="Models\ESP8266\ESPSensors.cs" />
     <Compile Include="Models\Logging.cs" />
+    <Compile Include="Models\TelegramBot.cs" />
     <Compile Include="Models\Weather.cs" />
     <Compile Include="Models\WeatherAverageView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,7 +1,6 @@
-﻿using qWeather.Models.ESP8266;
-using System;
+﻿using qWeather.Models;
+using qWeather.Models.ESP8266;
 using System.Web;
-using System.Web.Configuration;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
@@ -11,6 +10,7 @@ namespace qWeather
 {
     public class MvcApplication : HttpApplication
     {
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
@@ -19,6 +19,14 @@ namespace qWeather
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             ESPDataStartSend.Start();
+
+
+            TelegramBot telegramBot = new TelegramBot();
+
+            telegramBot.Bot.OnMessage += telegramBot.Bot_OnMessage;
+            telegramBot.Bot.StartReceiving();
         }
+
+        
     }
 }
