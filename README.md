@@ -4,6 +4,8 @@ ESP8266 Temperature checking
 
 https://qutuck.host/qWeather/
 
+Telegram Bot @qWeather_biqus_bot
+
 WebSite based on:
 * ASP.NET Framework as API
 * Entity framework as work with DB
