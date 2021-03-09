@@ -260,3 +260,5 @@ paket-files/
 __pycache__/
 *.pyc
 /qWeather/Logs
+/qWeather/Properties/ServiceDependencies/qweather - Web Deploy/profile.arm.json
+/qWeather/Properties/PublishProfiles/qweather - Web Deploy.pubxml
