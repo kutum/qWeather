@@ -32,10 +32,9 @@ namespace qWeather.Controllers
 
         [Route("last")]
         [HttpGet()]
-        public async Task<Weather> GetLast()
+        public Task<Weather> GetLast()
         {
-            DateTime LastDate = await context.Weather.MaxAsync(y => y.DATETIME);
-            return await context.Weather.Where(x => x.DATETIME == LastDate).OrderByDescending(x => x.DATETIME).FirstOrDefaultAsync();
+            return context.Weather.OrderByDescending(x => x.DATETIME).FirstOrDefaultAsync();
         }
         
         [Route("now")]
