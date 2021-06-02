@@ -9,8 +9,10 @@ Telegram Bot @qWeather_biqus_bot
 WebSite based on:
 * ASP.NET Framework as API
 * Entity framework as work with DB
-* MySQL Database as Maria DB.
+* MSSQL Database
 * knockout.js as viewmodel
+
+Service based on .net to get data from ESP and put to DB
 
 Website hosting on Ubuntu Server 18.04 with apache and mod mono-develop-server 
 
