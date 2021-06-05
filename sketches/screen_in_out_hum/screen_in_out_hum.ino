@@ -4,13 +4,18 @@
 #include <DallasTemperature.h>                          //Библиотека для работы с датчиком температуры и влажности DS18B20              
 #include <ESP8266WiFi.h>                                //Библиотека для подключения к WiFi 
 #include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <aREST.h>                                      //Библиотека для обработки REST запросов
 #include <NTPClient.h>                                  //Библиотека для получения даты и времени через интернет
 #include <WiFiUdp.h>                                    //Библиотека для работы с UDP-пакетами
 
 #define DT 14                                           //Датчик на корпусе DHT11 
 #define DHTPIN 2                                        //Выносной датчик температуры и влажности DS18B20 
+#define OTAUSER         "admin"                         // Логин для входа в OTA
+#define OTAPASSWORD     "admin"                         // Пароль для входа в ОТА
+#define OTAPATH         "/firmware"                     // Путь, который будем дописывать после ip адреса в браузере.
+#define SERVERPORT      8080                            // Порт для входа, он стандартный 88 это порт http
+
 
 OneWire oneWire_DT(DT);                                 //Инициализируем шину связи для DHT11
 DallasTemperature DS18B20_DT(&oneWire_DT);              //Инициализируем датчик DS18B20
@@ -18,30 +23,25 @@ DHT dht(DHTPIN, DHT11);                                 //Инициализируем датчик 
 LiquidCrystal_I2C lcd(0x27, 16, 2);                     //Инициализируем экран с размером 16 "ячеек" в ширину, 2 в высоту с адресом 0x27
 aREST rest = aREST();                                   //Инициализируем сервис REST для обработки запросов по API
 WiFiUDP ntpUDP;                                         //Инициализируем обработчика UDP пакетов для получения и расшифровки даты и времени
-NTPClient timeClient(ntpUDP, "pool.ntp.org");            //Инициализируем "клиента времени" который берёт дату и время с сервера pool.ntp.org
-WiFiServer server(80);                                  //Инициализируем веб-сервер, на котором будет крутиться REST сервис
+NTPClient timeClient(ntpUDP, "pool.ntp.org");           //Инициализируем "клиента времени" который берёт дату и время с сервера pool.ntp.org
+ESP8266WebServer HttpServer(SERVERPORT);                //Инициализируем веб-сервер, на котором будет крутиться REST сервис
+ESP8266HTTPUpdateServer httpUpdater;
+WiFiServer server(80);
 
 float T_IN;                                             //Переменная со значением температуры с DHT11 (комнатная)
 float Humidity;                                         //Переменная со значением влажности
 float T_OUT;                                            //Переменная со значением температуры с DS18B20
 
-char ssid[] = "xiaomi_kutuck";                          //Имя WiFi сети к которой подключаемся
-char pass[] = "myofrene";                               //Пароль WiFi сети
+char ssid[] = "wifiname";                          //Имя WiFi сети к которой подключаемся
+char pass[] = "wifipass";                               //Пароль WiFi сети
 
 unsigned long timing;                                   //Переменная "времени", для выполнения операций циклично в определённое время
 bool blinker = false;                                   //Переменная для "мигания" двоеточием на часах
-
 
 byte sun[8] = { B00111, B00011, B00001, B01000, B11000, B01100, B01000, B11111 };       //Символ "улица" для внешней температуры
 byte house[8] = { B00100, B01010, B10001, B11111, B10001, B10101, B11111, B00000 };     //Символ "домик" для комнатной температуры
 byte humidity[8] = { B00000, B00100, B01110, B01110, B11111, B11111, B01110, B00000 };  //Символ "капля" для влажности
 byte celsium[8] = { B00001, B00000, B01110, B10000, B10000, B10000, B01110, B00000 };   //Символ градуса цельсия 
-
-const char* serverName = "http://192.168.1.5/qWeather/api/update";
-
-bool first = true;
-
-int periodMinutes = 10;
 
 void getTemperature() {                                 //Функция получения температуры с датчиков
     do {
@@ -88,14 +88,17 @@ void setup() {                                           //Инициализация при зап
     delay(1000);
     lcd.clear();                                          //Очищаем дисплей
 
-                                                                //Инициализация переменных для REST API  
+                                                             //Инициализация переменных для REST API  
     rest.variable("T_IN", &T_IN);                               //Внутренняя температура                                                                        
     rest.variable("T_OUT", &T_OUT);                             //Наружняя температура
     rest.variable("Humidity", &Humidity);                       //Влажность воздуха
     rest.set_id("1");                                           //ID контроллера (на случай если используется больше одного, нужно их пронумеровать для удобства                                             
     rest.set_name("esp8266");                                   //Имя контроллера
 
-    server.begin();                                             //Запускаем веб-сервер             
+    httpUpdater.setup(&HttpServer, OTAPATH, OTAUSER, OTAPASSWORD);
+    HttpServer.begin();
+
+    server.begin();                                         //Запускаем веб-сервер              
 
     lcd.setCursor(0, 0);
     lcd.print("DEVICE IP");
@@ -105,7 +108,7 @@ void setup() {                                           //Инициализация при зап
     lcd.clear();
 
     timeClient.begin();                                         //Запуск клиента даты и времени
-    timeClient.setTimeOffset(14400);                            //Установка часового пояса (в данном случае GMT+4, где одна единица GMT равна 3600 итого 3600*4=14400)
+    timeClient.setTimeOffset(10800);                            //Установка часового пояса (в данном случае GMT+4, где одна единица GMT равна 3600 итого 3600*4=14400)
 
     lcd.createChar(1, sun);                                     //Создаём символ "улица"
     lcd.createChar(2, house);                                   //Создаём символ "дом"
@@ -119,19 +122,9 @@ void loop() {                                                  //Функция, котора
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        writeLCD();                                                 //Функция вывода показаний на экран                     
-        restapi();                                                  //Функция обработки REST API запросов
-
-        int minutes = timeClient.getMinutes();
-
-        for (int m = 0; m <= 60; m = m + periodMinutes)
-        {
-            if (minutes == m && minutes != lastInsert)
-            {
-                sendPostRequest();
-                lastInsert = minutes;
-            }
-        }
+        HttpServer.handleClient();
+        writeLCD();                                                 //Функция вывода показаний на экран   
+        restapi();                                                  //Функция обработки REST API запросов                  
     }
     else {
 
@@ -142,6 +135,21 @@ void loop() {                                                  //Функция, котора
 
         delay(3000);
     }
+}
+
+void restapi() {                                             //функция обработки REST API запросов
+
+    WiFiClient client = server.available();
+
+    if (!client) {
+        return;
+    }
+
+    if (!client.available()) {
+        return;
+    }
+
+    rest.handle(client);
 }
 
 void writeLCD()                                               //Функция вывода значений на экран
@@ -220,21 +228,6 @@ void writeLCD()                                               //Функция вывода з
     }
 }
 
-void restapi() {                                             //функция обработки REST API запросов
-
-    WiFiClient client = server.available();
-
-    if (!client) {
-        return;
-    }
-
-    if (!client.available()) {
-        return;
-    }
-
-    rest.handle(client);
-}
-
 String getDate() {                                          //Функция получения даты в формате ДД.ММ.ГГГГ
     time_t rawtime = timeClient.getEpochTime();              //Получаем дату
     struct tm* ti;
@@ -250,33 +243,4 @@ String getDate() {                                          //Функция получения 
     String dayStr = day < 10 ? "0" + String(day) : String(day);
 
     return dayStr + "." + monthStr + "." + yearStr/*.substring(2,4)*/;
-}
-
-void sendPostRequest()
-{
-    HTTPClient http;
-
-    http.begin(serverName);
-    http.addHeader("Content-Type", "application/json");
-
-    String request = "{\"T_IN\":\"" + String(T_IN) + "\",\"T_OUT\":\"" + String(T_OUT) + "\",\"Humidity\":\"" + String(Humidity) + "\"}";
-    int httpResponseCode = http.POST(request);
-
-    Serial.println(serverName);
-    Serial.println("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    Serial.println(request);
-
-    http.end();
-
-    if (httpResponseCode != 204)
-    {
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("POST SEND ERROR");
-
-        delay(1000);
-        sendPostRequest();
-
-    }
 }
