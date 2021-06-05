@@ -8,12 +8,28 @@ using qWeather.Models.ESP8266;
 
 namespace qWeather.Models
 {
+    /// <summary>
+    /// Телеграм бот получения данных с датчиков
+    /// </summary>
     public class TelegramBot
     {
+        /// <summary>
+        /// Инициализация телеграм бота по ключу
+        /// </summary>
         public TelegramBotClient Bot = new TelegramBotClient(WebConfigurationManager.AppSettings["TelegramBotKey"]);
 
+        /// <summary>
+        /// Данные с контроллера
+        /// </summary>
         private ESPData ESPData = new ESPData();
 
+        private readonly Uri ESPServiceUrl = new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]);
+
+        /// <summary>
+        /// Обработка сообщений посылаемых боту
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="messageEventArgs"></param>
         public void Bot_OnMessage(object sender, MessageEventArgs messageEventArgs)
         {
             var message = messageEventArgs.Message;
@@ -38,9 +54,15 @@ namespace qWeather.Models
                 case "humidity":
                     CommandHumidity(message.Chat.Id);
                     break;
+                default: CommandStart(message.Chat.Id);
+                    break;
             }
         }
 
+        /// <summary>
+        /// Отображение кнопок по команде "старт"
+        /// </summary>
+        /// <param name="Id">Id получателя</param>
         private void CommandStart (long Id)
         {
             var keyboard = new ReplyKeyboardMarkup
@@ -60,26 +82,42 @@ namespace qWeather.Models
             Bot.SendTextMessageAsync(Id, "choose", replyMarkup: keyboard);
         }
 
+        /// <summary>
+        /// Остановка бота
+        /// </summary>
+        /// <param name="Id">Id получателя</param>
         private void CommandEnd (long Id)
         {
             Bot.SendTextMessageAsync(Id, "Stop Recived");
         }
 
+        /// <summary>
+        /// Температура снаружи
+        /// </summary>
+        /// <param name="Id">Id получателя</param>
         private async void CommandOutside(long Id)
         {
-            ESPData = await ESPData.GetAsync(new Uri(WebConfigurationManager.AppSettings["ESP8266url"]));
+            ESPData = await ESPData.GetAsync(ESPServiceUrl);
             await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
         }
 
+        /// <summary>
+        /// Температура комнатная
+        /// </summary>
+        /// <param name="Id">Id получателя</param>
         private async void CommandInside (long Id)
         {
-            ESPData = await ESPData.GetAsync(new Uri(WebConfigurationManager.AppSettings["ESP8266url"]));
+            ESPData = await ESPData.GetAsync(ESPServiceUrl);
             await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
         }
 
+        /// <summary>
+        /// Влажность
+        /// </summary>
+        /// <param name="Id">Id получателя</param>
         private async void CommandHumidity(long Id)
         {
-            ESPData = await ESPData.GetAsync(new Uri(WebConfigurationManager.AppSettings["ESP8266url"]));
+            ESPData = await ESPData.GetAsync(ESPServiceUrl);
             await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
         }
     }

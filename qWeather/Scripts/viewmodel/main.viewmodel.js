@@ -15,6 +15,6 @@
     insideAverage: ko.observable(),
     humidityAverage: ko.observable(),
 
-    dropdownOptions: ko.observableArray(['Last 4h', 'Last 8h',  'Day', 'Week', 'Month', 'Year']),
+    dropdownOptions: ko.observableArray(['Last 4h', 'Last 8h', 'Day', 'Week', 'Month', 'Year', 'All']),
     dropdownValue: ko.observable()
 };

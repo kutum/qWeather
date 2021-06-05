@@ -9,7 +9,7 @@ namespace qWeather
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js"));
-
+            
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
 
@@ -18,6 +18,11 @@ namespace qWeather
 
             bundles.Add(new ScriptBundle("~/bundles/chartjs").Include(
                         "~/Scripts/Chart.js"));
+
+            bundles.Add(new ScriptBundle("~/bundles/signalr").Include(
+                        "~/Scripts/jquery.signalR-2.4.1.js",
+                        "~/Scripts/signalr-hubs.js"));
+
 
             bundles.Add(new ScriptBundle("~/bundles/viewmodel").Include(
                         "~/Scripts/viewmodel/*.viewmodel.js"));

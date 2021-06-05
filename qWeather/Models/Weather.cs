@@ -4,6 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace qWeather.Models
 {
+    /// <summary>
+    /// Данные с датчиков
+    /// </summary>
     [Table ("WEATHER")]
     public class Weather
     {

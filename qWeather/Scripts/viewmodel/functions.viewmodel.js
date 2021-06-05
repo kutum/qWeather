@@ -83,6 +83,15 @@ function getYear(day) {
     }, "year?date=" + getDateTimeSting(day));
 }
 
+function getAll() {
+    sendAjaxRequest("GET", function (data) {
+        model.weather.removeAll();
+        for (var i = 0; i < data.length; i++) {
+            model.weather.push(data[i]);
+        }
+    }, "allyears");
+}
+
 function getLast() {
     sendAjaxRequest("GET", function (data) {
         model.datetimeLast((data.DateTimeFormattedRus));

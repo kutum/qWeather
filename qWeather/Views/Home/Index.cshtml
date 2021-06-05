@@ -92,30 +92,39 @@
 
 <script>
     $("#dateRange").change(function () {
-
         var value = $(this).val();
-
-        if (value == 'Last 4h') {
-            initData(4);
-        }
-        if (value == 'Last 8h') {
-            initData(8);
-        }
-        if (value == 'Day') {
-            getDay(new Date());
-            getAverageByDay(new Date());
-        }
-        if (value == 'Week') {
-            getWeek(new Date());
-            getAverageByWeek(new Date());
-        }
-        if (value == 'Month') {
-            getMonth(new Date());
-            getAverageByMonth(new Date());
-        }
-        if (value == 'Year') {
-            getYear(new Date());
-            getAverageByWeek(new Date());
-        }
+        LoadByDateRange(value);
     });
+
+    function LoadByDateRange(value) {
+
+        switch (value) {
+            case 'Last 4h':
+                initData(4);
+                break;
+            case 'Last 8h':
+                initData(8);
+                break;
+            case 'Day':
+                getDay(new Date());
+                getAverageByDay(new Date());
+                break;
+            case 'Week':
+                getWeek(new Date());
+                getAverageByWeek(new Date());
+                break;
+            case 'Month':
+                getMonth(new Date());
+                getAverageByMonth(new Date());
+                break;
+            case 'Year':
+                getYear(new Date());
+                getAverageByWeek(new Date());
+                break;
+            case 'All':
+                getAll();
+                getAverageByWeek(new Date());
+                break;
+        }
+    }
 </script>

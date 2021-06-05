@@ -44,7 +44,10 @@ ko.bindingHandlers.ChartTemp = {
             }
             if (type == 'Year') {
                 dataLabels.push(months[thisdate.getMonth()]);
-            }   
+            }
+            if (type == 'All') {
+                dataLabels.push(months[thisdate.getMonth().toString()] + " " + thisdate.getFullYear().toString());
+            }
         }
 
         var ctx = element.getContext('2d');
@@ -106,7 +109,10 @@ ko.bindingHandlers.ChartHumidity = {
             }
             if (type == 'Year') {
                 dataLabels.push(months[thisdate.getMonth()]);
-            }  
+            }
+            if (type == 'All') {
+                dataLabels.push(months[thisdate.getMonth().toString()] + " " + thisdate.getFullYear().toString());
+            }
         }
 
         var ctx = element.getContext('2d');

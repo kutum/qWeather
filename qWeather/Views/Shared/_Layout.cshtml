@@ -15,6 +15,7 @@
     @Scripts.Render("~/bundles/bootstrap")
     @Scripts.Render("~/bundles/knockout")
     @Scripts.Render("~/bundles/chartjs")
+    @Scripts.Render("~/bundles/signalr")
     @Scripts.Render("~/bundles/viewmodel")
 
     @RenderSection("scripts", required: true)
@@ -24,19 +25,44 @@
     </div>
 
     <script>
-        function sendAjaxRequest(httpMethod, callback, url, reqData) {
 
         var pathtoapi = "@WebConfigurationManager.AppSettings["pathtoapi"]";
 
-        $.ajax(pathtoapi + (url ? "/" + url : ""), {
-            type: httpMethod,
-            success: callback,
-            data: JSON.stringify(reqData),
-            accepts: "application/json",
-            contentType: "application/json"
+        function sendAjaxRequest(httpMethod, callback, url, reqData) {
+            $.ajax(pathtoapi + (url ? "/" + url : ""), {
+                type: httpMethod,
+                success: callback,
+                data: JSON.stringify(reqData),
+                accepts: "application/json",
+                contentType: "application/json"
+            });
+        }
 
+        var notifications = $.connection.weathersHub;
+
+        notifications.client.updateMessages = function () {
+            getAllMessages();
+        }
+
+        $.connection.hub.start().done(function () {
+            getAllMessages();
+        }).fail(function (e) {
+            alert(e);
+            //TODO: Error: No transport could be initialized successfully. Try specifying a different transport or none at all for auto initialization.
         });
-    }
+
+        function getAllMessages() {
+            $.ajax({
+                url: pathtoapi + "/getmessages",
+                contentType: 'application/html ; charset:utf-8',
+                type: 'GET',
+                dataType: 'html',
+                success: function (result) {
+                    var value = document.getElementById("dateRange").value;
+                    LoadByDateRange(value);
+                }
+            });
+        }
     </script>
 </body>
 </html>

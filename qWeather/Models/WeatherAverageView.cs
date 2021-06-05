@@ -11,16 +11,22 @@ namespace qWeather.Models
         /// Средняя наружняя температура
         /// </summary>
         public float? outsideTemp { get; set; }
+
         /// <summary>
         /// Средняя внутренняя температура
         /// </summary>
         public float? insideTemp { get; set; }
+
         /// <summary>
         /// Средняя влажность
         /// </summary>
         public float? humidity { get; set; }
 
-        public WeatherAverageView (List <Weather> weathers)
+        /// <summary>
+        /// Средний показатель по скипку данных с датчиков
+        /// </summary>
+        /// <param name="weathers">Список данных с датчиков</param>
+        public WeatherAverageView (List<Weather> weathers)
         {
             float? outsideTempSum = 0.0f;
             float? insideTempSum = 0.0f;
