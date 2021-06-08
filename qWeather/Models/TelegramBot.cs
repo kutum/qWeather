@@ -23,6 +23,14 @@ namespace qWeather.Models
         /// </summary>
         private ESPData ESPData = new ESPData();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private Logging logging = new Logging();
+
+        /// <summary>
+        /// 
+        /// </summary>
         private readonly Uri ESPServiceUrl = new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]);
 
         /// <summary>
@@ -97,18 +105,36 @@ namespace qWeather.Models
         /// <param name="Id">Id получателя</param>
         private async void CommandOutside(long Id)
         {
-            ESPData = await ESPData.GetAsync(ESPServiceUrl);
-            await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
+            try
+            {
+                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
+            }
+            catch (Exception ex)
+            {
+                logging.WriteLog(ex);
+                await Bot.SendTextMessageAsync(Id, "<code>" + ex.Message + "\n" + ex.InnerException + "</code>", parseMode: ParseMode.Html);
+            }
+
         }
 
         /// <summary>
         /// Температура комнатная
         /// </summary>
         /// <param name="Id">Id получателя</param>
-        private async void CommandInside (long Id)
+        private async void CommandInside(long Id)
         {
-            ESPData = await ESPData.GetAsync(ESPServiceUrl);
-            await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
+            try
+            {
+                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
+
+            }
+            catch (Exception ex)
+            {
+                logging.WriteLog(ex);
+                await Bot.SendTextMessageAsync(Id, "<code>" + ex.Message + "\n" + ex.InnerException + "</code>", parseMode: ParseMode.Html);
+            }
         }
 
         /// <summary>
@@ -117,8 +143,16 @@ namespace qWeather.Models
         /// <param name="Id">Id получателя</param>
         private async void CommandHumidity(long Id)
         {
-            ESPData = await ESPData.GetAsync(ESPServiceUrl);
-            await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
+            try 
+            {
+                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
+            }
+            catch (Exception ex)
+            {
+                logging.WriteLog(ex);
+                await Bot.SendTextMessageAsync(Id, "<code>" + ex.Message + "\n" + ex.InnerException + "</code>", parseMode: ParseMode.Html);
+            }
         }
     }
 }

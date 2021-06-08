@@ -44,7 +44,7 @@ namespace qWeather.Models.ESP8266
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = URL;
-                    client.Timeout = new TimeSpan (0, 5, 0);
+                    client.Timeout = new TimeSpan (0, 1, 0);
                     client.DefaultRequestHeaders.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
