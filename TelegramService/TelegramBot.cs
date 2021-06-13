@@ -1,37 +1,43 @@
-﻿using System;
-using System.Web.Configuration;
+﻿using qWeather.Models;
+using qWeather.Models.ESP8266;
+using System;
+using System.Configuration;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using qWeather.Models.ESP8266;
 
-namespace qWeather.Models
+namespace TelegramService
 {
-    /// <summary>
-    /// Телеграм бот получения данных с датчиков
-    /// </summary>
     public class TelegramBot
     {
+        public TelegramBot()
+        {
+            Bot = new TelegramBotClient(ConfigurationManager.AppSettings["TelegramBotKey"]);
+            ESPData = new ESPData();
+            logging = new Logging();
+            espServiceUrl = new Uri(ConfigurationManager.AppSettings["espServiceUrl"]);
+        }
+
         /// <summary>
         /// Инициализация телеграм бота по ключу
         /// </summary>
-        public TelegramBotClient Bot = new TelegramBotClient(WebConfigurationManager.AppSettings["TelegramBotKey"]);
+        public TelegramBotClient Bot;
 
         /// <summary>
         /// Данные с контроллера
         /// </summary>
-        private ESPData ESPData = new ESPData();
+        private ESPData ESPData;
 
         /// <summary>
         /// 
         /// </summary>
-        private Logging logging = new Logging();
+        private Logging logging;
 
         /// <summary>
         /// 
         /// </summary>
-        private readonly Uri ESPServiceUrl = new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]);
+        private readonly Uri espServiceUrl;
 
         /// <summary>
         /// Обработка сообщений посылаемых боту
@@ -42,12 +48,12 @@ namespace qWeather.Models
         {
             var message = messageEventArgs.Message;
 
-            if (message == null || message.Type != MessageType.Text) 
+            if (message == null || message.Type != MessageType.Text)
                 return;
 
             switch (message.Text)
             {
-                case "/start" :
+                case "/start":
                     CommandStart(message.Chat.Id);
                     break;
                 case "/stop":
@@ -62,7 +68,8 @@ namespace qWeather.Models
                 case "humidity":
                     CommandHumidity(message.Chat.Id);
                     break;
-                default: CommandStart(message.Chat.Id);
+                default:
+                    CommandStart(message.Chat.Id);
                     break;
             }
         }
@@ -71,7 +78,7 @@ namespace qWeather.Models
         /// Отображение кнопок по команде "старт"
         /// </summary>
         /// <param name="Id">Id получателя</param>
-        private void CommandStart (long Id)
+        private void CommandStart(long Id)
         {
             var keyboard = new ReplyKeyboardMarkup
             {
@@ -94,7 +101,7 @@ namespace qWeather.Models
         /// Остановка бота
         /// </summary>
         /// <param name="Id">Id получателя</param>
-        private void CommandEnd (long Id)
+        private void CommandEnd(long Id)
         {
             Bot.SendTextMessageAsync(Id, "Stop Recived");
         }
@@ -107,7 +114,7 @@ namespace qWeather.Models
         {
             try
             {
-                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                ESPData = await ESPData.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
             }
             catch (Exception ex)
@@ -126,7 +133,7 @@ namespace qWeather.Models
         {
             try
             {
-                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                ESPData = await ESPData.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
 
             }
@@ -143,9 +150,9 @@ namespace qWeather.Models
         /// <param name="Id">Id получателя</param>
         private async void CommandHumidity(long Id)
         {
-            try 
+            try
             {
-                ESPData = await ESPData.GetAsync(ESPServiceUrl);
+                ESPData = await ESPData.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
             }
             catch (Exception ex)

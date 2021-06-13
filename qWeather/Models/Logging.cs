@@ -90,7 +90,7 @@ namespace qWeather.Models
                 var Message = new string[]
                 { 
                     DateTimeLog + " " + exception.Message,
-                    exception.InnerException.Message
+                    exception?.InnerException?.Message
                 };
 
                 WriteStream(Message);

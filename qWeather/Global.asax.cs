@@ -1,6 +1,4 @@
-﻿using qWeather.Models;
-using System;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Data.SqlClient;
 using System.Web;
 using System.Web.Http;
@@ -21,20 +19,7 @@ namespace qWeather
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-
             SqlDependency.Start(connectionString);
-
-            try
-            {
-                TelegramBot telegramBot = new TelegramBot();
-                telegramBot.Bot.OnMessage += telegramBot.Bot_OnMessage;
-                telegramBot.Bot.StartReceiving();
-            }
-            catch (Exception ex)
-            {
-                Logging logging = new Logging();
-                logging.WriteLog(ex.Message);
-            }
         }
 
         protected void Application_End()
