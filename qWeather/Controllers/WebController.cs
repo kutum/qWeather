@@ -46,7 +46,7 @@ namespace qWeather.Controllers
         [HttpGet()]
         public IEnumerable<Weather> Get()
         {
-            return context.Weather.OrderByDescending(x => x.DATETIME).OrderBy(x => x.DATETIME);
+            return context.Weather.OrderBy(x => x.DATETIME);
         }
 
         /// <summary>
@@ -307,14 +307,14 @@ namespace qWeather.Controllers
         [HttpGet()]
         public IEnumerable<Weather> GetByYears()
         {
-            var weatherGroups =  context.Weather.GroupBy(x => x.DATETIME.Month).ToList();
+            var weatherGroups = context.Weather.GroupBy(g => new { g.DATETIME.Year, g.DATETIME.Month }).ToList();
 
             foreach (var item in weatherGroups)
             {
                 weathers.AddRange(weatherGroups.Where(x => x.Key == item.Key)
                     .Select(itemByMonth => new Weather
                     {
-                        DATETIME = new DateTime(itemByMonth.Min(x => x.DATETIME.Year), item.Key, 1),
+                        DATETIME = new DateTime(item.Key.Year, item.Key.Month, 1),
                         VAL1 = itemByMonth.Sum(x => x.VAL1) / itemByMonth.Count(),
                         VAL2 = itemByMonth.Sum(x => x.VAL2) / itemByMonth.Count(),
                         HUMIDITY = itemByMonth.Sum(x => x.HUMIDITY) / itemByMonth.Count()

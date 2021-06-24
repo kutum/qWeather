@@ -18,6 +18,8 @@
     @Scripts.Render("~/bundles/signalr")
     @Scripts.Render("~/bundles/viewmodel")
 
+    <script src="@Url.Content("~/signalr/hubs")"></script>
+
     @RenderSection("scripts", required: true)
 
     <div class="container ">
@@ -44,12 +46,15 @@
             getAllMessages();
         }
 
-        $.connection.hub.start().done(function () {
+        $.connection.hub.logging = true;
+
+        $.connection.hub.start({ transport: 'longPolling' }).done(function () {
             getAllMessages();
         }).fail(function (e) {
             alert(e);
             //TODO: Error: No transport could be initialized successfully. Try specifying a different transport or none at all for auto initialization.
         });
+
 
         function getAllMessages() {
             $.ajax({

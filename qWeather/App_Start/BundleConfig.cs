@@ -20,8 +20,7 @@ namespace qWeather
                         "~/Scripts/Chart.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/signalr").Include(
-                        "~/Scripts/jquery.signalR-2.4.1.js",
-                        "~/Scripts/signalr-hubs.js"));
+                        "~/Scripts/jquery.signalR-2.4.2.js"));
 
 
             bundles.Add(new ScriptBundle("~/bundles/viewmodel").Include(

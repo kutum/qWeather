@@ -7,6 +7,7 @@ namespace qWeather.Hubs
     /// <summary>
     /// 
     /// </summary>
+    [HubName("weathersHub")]
     public class WeathersHub : Hub
     {
         /// <summary>
