@@ -108,7 +108,6 @@ namespace espService
             catch (Exception ex)
             {
                 logging.WriteLog(ex);
-                throw new Exception(ex.Message);
             }
         }
 
