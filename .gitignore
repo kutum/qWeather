@@ -262,3 +262,4 @@ __pycache__/
 /qWeather/Logs
 /qWeather/Properties/ServiceDependencies/qweather - Web Deploy/profile.arm.json
 /qWeather/Properties/PublishProfiles/qweather - Web Deploy.pubxml
+/sketches/screen_in_out_hum/screen_in_out_hum.ino.nodemcu.bin
