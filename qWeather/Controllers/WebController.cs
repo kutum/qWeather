@@ -1,6 +1,7 @@
 ﻿using qWeather.Context;
 using qWeather.Models;
 using qWeather.Models.ESP8266;
+using qWeather.Models.ESP8266.Interfaces;
 using qWeather.SignalR;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,13 @@ namespace qWeather.Controllers
     [RoutePrefix("api")]
     public class WebController : ApiController
     {
+        private static IESPMethods espMethods;
+
+        public WebController()
+        {
+            espMethods = new ESPMethods();
+        }
+
         /// <summary>
         /// Контекст подключения к БД
         /// </summary>
@@ -94,16 +102,15 @@ namespace qWeather.Controllers
         {
             try
             {
-                ESPData ESPData = new ESPData();
-                ESPData = await ESPData.GetAsync(new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]));
+                var data = await espMethods.GetAsync(new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]));
 
                 return new Weather
                 {
-                    Id = ESPData.id,
+                    Id = data.id,
                     DATETIME = DateTime.Now,
-                    VAL1 = ESPData.variables.T_OUT,
-                    VAL2 = ESPData.variables.T_IN,
-                    HUMIDITY = ESPData.variables.Humidity
+                    VAL1 = data.variables.T_OUT,
+                    VAL2 = data.variables.T_IN,
+                    HUMIDITY = data.variables.Humidity
                 };
             }
             catch (Exception ex)

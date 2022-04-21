@@ -1,5 +1,6 @@
 ﻿using qWeather.Models;
 using qWeather.Models.ESP8266;
+using qWeather.Models.ESP8266.Interfaces;
 using System;
 using System.Configuration;
 using Telegram.Bot;
@@ -11,12 +12,15 @@ namespace TelegramService
 {
     public class TelegramBot
     {
+        private static IESPMethods espMethods;
+
         public TelegramBot()
         {
             Bot = new TelegramBotClient(ConfigurationManager.AppSettings["TelegramBotKey"]);
             ESPData = new ESPData();
             logging = new Logging();
             espServiceUrl = new Uri(ConfigurationManager.AppSettings["espServiceUrl"]);
+            espMethods = new ESPMethods();
         }
 
         /// <summary>
@@ -114,7 +118,7 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await ESPData.GetAsync(espServiceUrl);
+                ESPData = await espMethods.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
             }
             catch (Exception ex)
@@ -133,7 +137,7 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await ESPData.GetAsync(espServiceUrl);
+                ESPData = await espMethods.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
 
             }
@@ -152,7 +156,7 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await ESPData.GetAsync(espServiceUrl);
+                ESPData = await espMethods.GetAsync(espServiceUrl);
                 await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
             }
             catch (Exception ex)

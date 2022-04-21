@@ -1,6 +1,7 @@
 ﻿using qWeather.Context;
 using qWeather.Models;
 using qWeather.Models.ESP8266;
+using qWeather.Models.ESP8266.Interfaces;
 using System;
 using System.Configuration;
 using System.ServiceProcess;
@@ -13,6 +14,8 @@ namespace espService
     /// </summary>
     public partial class EspService : ServiceBase, IEspService
     {
+        private IESPMethods espMethods;
+
         /// <summary>
         /// Логгирование
         /// </summary>
@@ -50,6 +53,7 @@ namespace espService
             timer = new Timer { Interval = TimeSpan.FromMinutes(Convert.ToDouble(ConfigurationManager.AppSettings["TimerInterval"].Replace(".", ","))).TotalMilliseconds };
             context = new WeatherDbContext();
             espServiceHttp = new EspServiceHttp();
+            espMethods = new ESPMethods();
         }
 
         /// <summary>
@@ -67,7 +71,7 @@ namespace espService
         /// <returns>Данные контроллера</returns>
         public ESPData Espdata()
         {
-            return espServiceHttp.Espdata(ESPurl, logging, ESPData);
+            return espServiceHttp.Espdata(espMethods, ESPurl, logging, ESPData);
         }
 
         /// <summary>
@@ -90,7 +94,7 @@ namespace espService
         {
             try
             {
-                ESPData = await ESPData.GetAsync(ESPurl);
+                ESPData = await espMethods.GetAsync(ESPurl);
 
                 var Message = new string[]
                 {

@@ -1,5 +1,6 @@
 ﻿using qWeather.Models;
 using qWeather.Models.ESP8266;
+using qWeather.Models.ESP8266.Interfaces;
 using System;
 using System.Net.NetworkInformation;
 
@@ -42,13 +43,13 @@ namespace espService
         /// Получение данных с контроллера
         /// </summary>
         /// <returns>Данные контроллера</returns>
-        public ESPData Espdata(Uri uri, Logging logging, ESPData eSPData)
+        public ESPData Espdata(IESPMethods espMethods, Uri uri, Logging logging, ESPData eSPData)
         {
             logging.WriteLog("Espdata response");
 
             try
             {
-                var Data = eSPData.Get(uri);
+                var Data = espMethods.Get(uri);
                 logging.WriteLog(Data);
                 return Data;
             }
