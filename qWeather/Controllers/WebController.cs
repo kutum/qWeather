@@ -98,19 +98,18 @@ namespace qWeather.Controllers
         /// <returns>Показания с датчиков</returns>
         [Route("now")]
         [HttpGet]
-        public async Task<Weather> Now()
+        public Weather Now()
         {
             try
             {
-                var data = await espMethods.GetAsync(new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]));
+                var data = espMethods.GetJson(new Uri(WebConfigurationManager.AppSettings["espServiceUrl"]));
 
                 return new Weather
                 {
-                    Id = data.id,
-                    DATETIME = DateTime.Now,
-                    VAL1 = data.variables.T_OUT,
-                    VAL2 = data.variables.T_IN,
-                    HUMIDITY = data.variables.Humidity
+                    DATETIME = data.DateTime,
+                    VAL1 = data.T_OUT,
+                    VAL2 = data.T_IN,
+                    HUMIDITY = data.Humidity
                 };
             }
             catch (Exception ex)

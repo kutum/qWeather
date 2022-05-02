@@ -2,7 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Web;
 
-namespace espService
+namespace espService.Interfaces
 {
     /// <summary>
     /// Интерфейс класса сервиса опроса контроллера
@@ -18,12 +18,8 @@ namespace espService
         [WebInvoke(Method = "GET", ResponseFormat = WebMessageFormat.Json)]
         string Status();
 
-        /// <summary>
-        /// Получение данных с контроллера
-        /// </summary>
-        /// <returns>Данные контроллера</returns>
         [OperationContract]
         [WebInvoke(Method = "GET", ResponseFormat = WebMessageFormat.Json)]
-        ESPData Espdata();
+        ESPData Now();
     }
 }

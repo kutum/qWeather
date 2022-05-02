@@ -1,10 +1,15 @@
-﻿using qWeather.Context;
+﻿using espService.Interfaces;
+using qWeather.Context;
 using qWeather.Models;
 using qWeather.Models.ESP8266;
 using qWeather.Models.ESP8266.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
+using System.Linq;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace espService
@@ -14,16 +19,16 @@ namespace espService
     /// </summary>
     public partial class EspService : ServiceBase, IEspService
     {
-        private IESPMethods espMethods;
 
+        private IESPMethods espMethods;
+        /// <summary>
+        /// Методы работы с HTTP запросами
+        /// </summary>
+        private IEspServiceHttp espServiceHttp;
         /// <summary>
         /// Логгирование
         /// </summary>
-        private readonly Logging logging;
-        /// <summary>
-        /// Класс данных с контроллера
-        /// </summary>
-        private ESPData ESPData;
+        private readonly ILogging logging;
         /// <summary>
         /// Сетевой адрес контроллера
         /// </summary>
@@ -32,14 +37,6 @@ namespace espService
         /// Таймер выполнения сервиса
         /// </summary>
         private readonly Timer timer;
-        /// <summary>
-        /// Контекст БД
-        /// </summary>
-        private readonly WeatherDbContext context;
-        /// <summary>
-        /// Методы работы с HTTP запросами
-        /// </summary>
-        private readonly EspServiceHttp espServiceHttp;
 
         /// <summary>
         /// Конструктор для заполнения данных сервиса получения данных с контроллера
@@ -48,12 +45,10 @@ namespace espService
         {
             InitializeComponent();
             logging = new Logging();
-            ESPData = new ESPData();
             ESPurl = new Uri(ConfigurationManager.AppSettings["ESP8266url"]);
             timer = new Timer { Interval = TimeSpan.FromMinutes(Convert.ToDouble(ConfigurationManager.AppSettings["TimerInterval"].Replace(".", ","))).TotalMilliseconds };
-            context = new WeatherDbContext();
-            espServiceHttp = new EspServiceHttp();
             espMethods = new ESPMethods();
+            espServiceHttp = new EspServiceHttp(logging);
         }
 
         /// <summary>
@@ -62,16 +57,12 @@ namespace espService
         /// <returns>Статус</returns>
         public string Status()
         {
-            return espServiceHttp.Status(ESPurl, logging);
+            return espServiceHttp.Status(ESPurl);
         }
 
-        /// <summary>
-        /// Получение данных с контроллера
-        /// </summary>
-        /// <returns>Данные контроллера</returns>
-        public ESPData Espdata()
+        public ESPData Now()
         {
-            return espServiceHttp.Espdata(espMethods, ESPurl, logging, ESPData);
+            return espMethods.Get(ESPurl);
         }
 
         /// <summary>
@@ -81,7 +72,7 @@ namespace espService
         protected override void OnStart(string[] args)
         {
             logging.WriteLog("Service started");
-            timer.Elapsed += new ElapsedEventHandler(OnElapsedTimeAsync);
+            timer.Elapsed += new ElapsedEventHandler(OnElapsedTime);
             timer.Enabled = true;
         }
 
@@ -90,55 +81,68 @@ namespace espService
         /// </summary>
         /// <param name="source"></param>
         /// <param name="e"></param>
-        private async void OnElapsedTimeAsync(object source, ElapsedEventArgs e)
+        private void OnElapsedTime(object source, ElapsedEventArgs e)
         {
             try
             {
-                ESPData = await espMethods.GetAsync(ESPurl);
+                var files = espMethods.GetString(new Uri(ESPurl.AbsoluteUri + "files"));
 
-                var Message = new string[]
+                if (string.IsNullOrEmpty(files))
+                    throw new Exception("Files not found");
+
+                var fileNames = files.Split(',').ToList();
+
+                List<Weather> espdatas = new List<Weather>();
+                foreach (var fileName in fileNames)
                 {
-                    "get from controller by IP: " + ESPurl,
-                    "name:" + ESPData.name,
-                    "T_OUT:" + ESPData.variables.T_OUT.ToString(),
-                    "T_IN:" + ESPData.variables.T_IN.ToString(),
-                    "Humidity:" + ESPData.variables.Humidity.ToString()
-                };
+                    var data = espMethods.GetString(new Uri(ESPurl.AbsoluteUri + "fdata?date=" + fileName));
 
-                logging.WriteLog(Message);
+                    if(string.IsNullOrEmpty(data))
+                    {
+                        logging.WriteLog("Trying to take data from " + fileName + " but its empty!");
+                        return;
+                    }
 
-                InsertIntoDB(ESPData);
+                    foreach (var row in data.Split(';').Where(x => x.Length > 0))
+                    {
+                        var items = row.Split(',');
+
+                        var Date = DateTime.ParseExact(fileName + " " + items[0], "yyyy-MM-dd H:mm:ss", CultureInfo.InvariantCulture);
+                        espdatas.Add(new Weather
+                        {
+                            DATETIME = Date,
+                            VAL2 = float.Parse(items[1].Replace('.', ',')),
+                            VAL1 = float.Parse(items[2].Replace('.', ',')),
+                            HUMIDITY = float.Parse(items[3].Replace('.', ','))
+                        });
+                    }
+                }
+                try
+                {
+                    using (var context = new WeatherDbContext())
+                    {
+                        var lastDate = context.Weather.Max(x => x.DATETIME);
+                        var espDatasInsert = espdatas.Where(x => x.DATETIME > lastDate);
+
+                        context.Weather.AddRange(espDatasInsert);
+                        var count = context.SaveChanges();
+                        logging.WriteLog("Inserted " + count + " items in " + context.Database.Connection.Database);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logging.WriteLog(ex);
+                    logging.WriteLog(espdatas);
+                    throw new Exception("Error while insert in database", ex);
+                }
+
+                foreach(var fileName in fileNames)
+                    espMethods.GetString(new Uri(ESPurl.AbsoluteUri + "delete?name=" + fileName));
+
             }
             catch (Exception ex)
             {
                 logging.WriteLog(ex);
-            }
-        }
-
-        /// <summary>
-        /// Вставка данных с контроллера в БД
-        /// </summary>
-        /// <param name="espdata">Данные с контроллера</param>
-        private async void InsertIntoDB(ESPData espdata)
-        {
-            try
-            {
-                context.Weather.Add(new Weather
-                {
-                    DATETIME = DateTime.Now,
-                    VAL1 = espdata.variables.T_OUT,
-                    VAL2 = espdata.variables.T_IN,
-                    HUMIDITY = espdata.variables.Humidity
-                });
-
-                await context.SaveChangesAsync();
-
-                logging.WriteLog("Successfull insert into DB: " + context.Database.Connection.Database);
-            }
-            catch (Exception ex)
-            {
-                logging.WriteLog(ex);
-                throw new Exception(ex.Message);
             }
         }
 

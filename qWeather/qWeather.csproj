@@ -266,8 +266,8 @@
     <Compile Include="Models\DateTimeExtensions.cs" />
     <Compile Include="Models\ESP8266\ESPData.cs" />
     <Compile Include="Models\ESP8266\ESPMethods.cs" />
-    <Compile Include="Models\ESP8266\ESPSensors.cs" />
     <Compile Include="Models\ESP8266\Interfaces\IESPMethods.cs" />
+    <Compile Include="Models\Interfaces\ILogging.cs" />
     <Compile Include="Models\Logging.cs" />
     <Compile Include="Models\Weather.cs" />
     <Compile Include="Models\WeatherAverageView.cs" />

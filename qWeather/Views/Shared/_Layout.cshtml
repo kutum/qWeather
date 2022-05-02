@@ -51,7 +51,7 @@
         $.connection.hub.start({ transport: 'longPolling' }).done(function () {
             getAllMessages();
         }).fail(function (e) {
-            alert(e);
+            //alert(e);
             //TODO: Error: No transport could be initialized successfully. Try specifying a different transport or none at all for auto initialization.
         });
 

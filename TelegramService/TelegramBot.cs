@@ -118,8 +118,8 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await espMethods.GetAsync(espServiceUrl);
-                await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.variables.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
+                ESPData = espMethods.GetJson(espServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>outside:</code> <b>" + ESPData.T_OUT + "°C</b>\n", parseMode: ParseMode.Html);
             }
             catch (Exception ex)
             {
@@ -137,8 +137,8 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await espMethods.GetAsync(espServiceUrl);
-                await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.variables.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
+                ESPData = espMethods.GetJson(espServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>inside:</code> <b>" + ESPData.T_IN + "°C</b>\n", parseMode: ParseMode.Html);
 
             }
             catch (Exception ex)
@@ -156,8 +156,8 @@ namespace TelegramService
         {
             try
             {
-                ESPData = await espMethods.GetAsync(espServiceUrl);
-                await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.variables.Humidity + "%</b>", parseMode: ParseMode.Html);
+                ESPData = espMethods.GetJson(espServiceUrl);
+                await Bot.SendTextMessageAsync(Id, "<code>humidity:</code> <b>" + ESPData.Humidity + "%</b>", parseMode: ParseMode.Html);
             }
             catch (Exception ex)
             {

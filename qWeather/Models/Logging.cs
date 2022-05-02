@@ -1,5 +1,6 @@
 ﻿using qWeather.Models.ESP8266;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
@@ -8,7 +9,7 @@ namespace qWeather.Models
     /// <summary>
     /// Запись в лог
     /// </summary>
-    public class Logging
+    public class Logging : ILogging
     {
         /// <summary>
         /// Конструктор класса записи в лог
@@ -29,7 +30,7 @@ namespace qWeather.Models
                                     "Logs",
                                     "Log_" + DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + ".txt"
                                     );
-            set => Filepath = this.Filepath;
+            set => Filepath = Filepath;
         }
         
         /// <summary>
@@ -39,7 +40,7 @@ namespace qWeather.Models
         {
             get => Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
                                     "Logs");
-            set => FolderPath = this.FolderPath;
+            set => FolderPath = FolderPath;
         }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace qWeather.Models
         private string DateTimeLog
         {
             get => "#" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            set => DateTimeLog = this.DateTimeLog;
+            set => DateTimeLog = DateTimeLog;
         }
 
         /// <summary>
@@ -59,16 +60,11 @@ namespace qWeather.Models
         {
             try
             {
-
                 var Message = new string[]
                 {
-                    DateTimeLog + " id: " + espdata.id.ToString(),
-                    "connected: " + espdata.connected,
-                    "hardware: " + espdata.hardware,
-                    "name: " + espdata.name,
-                    "T_OUT: " + espdata.variables.T_OUT.ToString(),
-                    "T_IN: " + espdata.variables.T_IN.ToString(),
-                    "humidity: " + espdata.variables.Humidity.ToString()
+                    DateTimeLog + "T_OUT: " + espdata.T_OUT.ToString(),
+                    "T_IN: " + espdata.T_IN.ToString(),
+                    "humidity: " + espdata.Humidity.ToString()
                 };
 
                 WriteStream(Message);
@@ -131,6 +127,25 @@ namespace qWeather.Models
             catch (Exception ex)
             {
                 throw new Exception("Logging.Writelog(string [] Message) " + ex.Message + "###" + ex.InnerException);
+            }
+        }
+
+        public void WriteLog(List<Weather> espdatas)
+        {
+            try
+            {
+                string[] data = new string[espdatas.Count];
+
+                for (var i = 0; i < espdatas.Count; i++)
+                {
+                    data[i] = espdatas[i].DATETIME + "," + espdatas[i].VAL2 + "," + espdatas[i].VAL1 + "," + espdatas[i].HUMIDITY;
+                }
+             
+                WriteStream(data);
+            }
+            catch(Exception ex)
+            {
+                throw new Exception("Logging.Writelog(List<Weather> espdatas) " + ex.Message + "###" + ex.InnerException);
             }
         }
 

@@ -1,29 +1,24 @@
-﻿namespace qWeather.Models.ESP8266
+﻿using System;
+
+namespace qWeather.Models.ESP8266
 {
     /// <summary>
     /// Класс данных с контроллера
     /// </summary>
     public class ESPData
     {
+        public DateTime DateTime { get; set; }
         /// <summary>
-        /// Датчики
+        /// Температура внутренняя
         /// </summary>
-        public ESPSensors variables { get; set; }
+        public float? T_IN { get; set; }
         /// <summary>
-        /// ID контроллера
+        /// Температура наружняя
         /// </summary>
-        public int id { get; set; }
+        public float? T_OUT { get; set; }
         /// <summary>
-        /// Название контроллера
+        /// Наружняя влажность
         /// </summary>
-        public string name { get; set; }
-        /// <summary>
-        /// Наимеование чипа контроллера
-        /// </summary>
-        public string hardware { get; set; }
-        /// <summary>
-        /// Статус подключения
-        /// </summary>
-        public string connected { get; set; }
+        public float? Humidity { get; set; }
     }
 }

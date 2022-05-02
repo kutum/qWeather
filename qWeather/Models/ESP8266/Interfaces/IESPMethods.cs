@@ -10,12 +10,10 @@ namespace qWeather.Models.ESP8266.Interfaces
         /// </summary>
         /// <param name="URL"></param>
         /// <returns></returns>
-        Task<ESPData> GetAsync(Uri URL);
-        /// <summary>
-        /// Получение данных с датчика синхронно
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <returns></returns>
         ESPData Get(Uri URL);
+
+        string GetString(Uri URL);
+
+        ESPData GetJson(Uri URL);
     }
 }
