@@ -20,7 +20,7 @@
 
     <script src="@Url.Content("~/signalr/hubs")"></script>
 
-    @RenderSection("scripts", required: true)
+    @RenderSection("scripts", required: false)
 
     <div class="container ">
         @RenderBody()
@@ -46,14 +46,14 @@
             getAllMessages();
         }
 
-        $.connection.hub.logging = true;
+        //$.connection.hub.logging = true;
 
-        $.connection.hub.start({ transport: 'longPolling' }).done(function () {
-            getAllMessages();
-        }).fail(function (e) {
-            //alert(e);
-            //TODO: Error: No transport could be initialized successfully. Try specifying a different transport or none at all for auto initialization.
-        });
+        //$.connection.hub.start({ transport: 'longPolling' }).done(function () {
+        //    getAllMessages();
+        //}).fail(function (e) {
+        //    //alert(e);
+        //    //TODO: Error: No transport could be initialized successfully. Try specifying a different transport or none at all for auto initialization.
+        //});
 
 
         function getAllMessages() {

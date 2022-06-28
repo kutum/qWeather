@@ -11,16 +11,16 @@ namespace qWeather
                         "~/Scripts/jquery-{version}.js"));
             
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
-                        "~/Scripts/jquery.validate*"));
+                        "~/Scripts/jquery.validate.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/knockout").Include(
                         "~/Scripts/knockout-3.5.1.js"));
 
-            bundles.Add(new ScriptBundle("~/bundles/chartjs").Include(
-                        "~/Scripts/Chart.js"));
+            bundles.Add(new Bundle("~/bundles/chartjs").Include(
+                        "~/Scripts/chart.min.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/signalr").Include(
-                        "~/Scripts/jquery.signalR-2.4.2.js"));
+                        "~/Scripts/jquery.signalR-2.4.3.js"));
 
 
             bundles.Add(new ScriptBundle("~/bundles/viewmodel").Include(
@@ -31,11 +31,11 @@ namespace qWeather
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
-            bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
-                      "~/Scripts/bootstrap.js"));
+            bundles.Add(new Bundle("~/bundles/bootstrap").Include(
+                      "~/Scripts/bootstrap.min.js"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/bootstrap.css",
+                      "~/Content/bootstrap.min.css",
                       "~/Content/site.css"));
         }
     }
